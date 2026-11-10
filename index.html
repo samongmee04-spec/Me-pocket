@@ -84,7 +84,7 @@ textarea{width:100%;min-height:130px;margin:8px 0;border-radius:16px;border:1px 
   <textarea id="cfgin" placeholder='apiKey: "...",&#10;authDomain: "...",&#10;projectId: "...",&#10;appId: "..."'></textarea>
   <div class="r"><button class="btn p" style="flex:1" onclick="connect()">เชื่อมต่อ / กู้คืนข้อมูล</button><button class="btn" onclick="disconnect()">ยกเลิกการเชื่อมต่อ</button></div>
   <button class="btn" style="width:100%;margin-top:8px" onclick="XL()">📊 ส่งออกเป็นไฟล์ Excel</button>
-  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-04 · รอบ 25–24 · Excel · Simulate · ค่าเดินทางอัตโนมัติ</div>
+  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-04 · รอบ 25–24 · Excel · Simulate อัตโนมัติ</div>
 </div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -463,7 +463,8 @@ function simRows(){
   let bal=0;const rows=[];
   for(let d=dt(st);ymd(d)<=end;d.setDate(d.getDate()+1)){
     const k=ymd(d),eb=B[k]!==undefined,eg=Gt[k]!==undefined,ex=X[k]!==undefined;
-    const b=eb?(+B[k]||0):bal,g=+Gt[k]||0,x=ex?(+X[k]||0):dBud(k),l=r2(b+g-x);
+    const f1=k>=today&&!rows.length;/* แถวแรก (วันนี้): Bud = รายรับรวม, spend = รายจ่ายรวม ของรอบนี้ อัตโนมัติ */
+    const b=eb?(+B[k]||0):f1?sum(mo(P).inc):bal,g=+Gt[k]||0,x=ex?(+X[k]||0):f1?expTot(P):dBud(k),l=r2(b+g-x);
     if(k>=today)rows.push({k,b,g,x,l,eb,eg,ex,w:d.getDay()});
     bal=l;
   }
@@ -485,7 +486,7 @@ function sim(){
       +SIMX('sb',x.k,r2(x.b),x.eb)+SIMX('sg',x.k,x.eg?x.g:'',x.eg)+SIMX('sx',x.k,r2(x.x),x.ex)
       +`<span class="lf" style="color:${x.l<0?'#c0584a':'var(--ink)'}">${lfm(x.l)}</span></div>`;
   });
-  h+=card(`<div class="mut" style="margin-bottom:6px">ลองกรอกเพื่อวางแผน ช่องที่แก้เองจะเป็นสีเหลือง ล้างช่องให้ว่างเพื่อกลับเป็นค่าอัตโนมัติ Bud ของแต่ละวัน = Left ของวันก่อน, spend เริ่มต้นตามงบรายวันที่ตั้งไว้ วันที่ผ่านไปแล้วจะหายไปเอง</div>`+t
+  h+=card(`<div class="mut" style="margin-bottom:6px">ลองกรอกเพื่อวางแผน ช่องที่แก้เองจะเป็นสีเหลือง ล้างช่องให้ว่างเพื่อกลับเป็นค่าอัตโนมัติ แถวแรกดึงอัตโนมัติ: Bud = รายรับรวม, spend = รายจ่ายรวมของรอบนี้ (แก้เองได้) แถวถัดไป Bud = Left ของวันก่อน, spend ตามงบรายวันที่ตั้งไว้ วันที่ผ่านไปแล้วจะหายไปเอง</div>`+t
     +`<div class="r" style="margin-top:10px"><button class="btn c" style="flex:1" onclick="SR()">รีเซ็ตค่าที่แก้ทั้งหมด</button></div>`);
   return h;
 }
