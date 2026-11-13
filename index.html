@@ -65,6 +65,7 @@ input[type=date]{border:1px solid #fff;border-radius:999px;padding:8px 12px;back
 .sg .dy{text-align:center;font-size:15px;line-height:1.1}.sg .dy small{display:block;font-size:10px;color:var(--mut)}
 .sg .lf{text-align:right;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;padding-right:4px;white-space:nowrap}
 .sg.we{background:rgba(255,255,255,.4);border-radius:12px}.sg.ln{border-top:1.5px solid #9aa0aa;margin-top:3px;padding-top:6px;border-radius:0}.sg.td{background:#fdf1c4;border-radius:12px}
+.pl input.n{width:118px}.pl input.n.e,.pr input.n.e{background:#fff4c9}.pr{display:flex;gap:8px;margin-bottom:8px}.pr label{flex:1;font-size:12px;color:var(--mut)}.pr input.n{width:100%;margin-top:3px}
 .tabs button.on{background:linear-gradient(180deg,#f7dc7a,#e8b93f);color:var(--ink);font-weight:600;box-shadow:0 3px 8px rgba(200,150,30,.4)}
 .top{display:flex;justify-content:space-between;align-items:center;padding:4px 6px}
 .mbg{position:fixed;inset:0;background:rgba(20,22,26,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
@@ -84,7 +85,7 @@ textarea{width:100%;min-height:130px;margin:8px 0;border-radius:16px;border:1px 
   <textarea id="cfgin" placeholder='apiKey: "...",&#10;authDomain: "...",&#10;projectId: "...",&#10;appId: "..."'></textarea>
   <div class="r"><button class="btn p" style="flex:1" onclick="connect()">เชื่อมต่อ / กู้คืนข้อมูล</button><button class="btn" onclick="disconnect()">ยกเลิกการเชื่อมต่อ</button></div>
   <button class="btn" style="width:100%;margin-top:8px" onclick="XL()">📊 ส่งออกเป็นไฟล์ Excel</button>
-  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-04 · รอบ 25–24 · Excel · Simulate อัตโนมัติ</div>
+  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-13 · รอบ 25–24 · Excel · Simulate อัตโนมัติ · Planning</div>
 </div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -130,9 +131,9 @@ function delIn(o,path){let c=o;for(let i=0;i<path.length-1;i++){c=c[path[i]];if(
 function applyPatch(base,patch){for(const k of Object.keys(patch)){const v=patch[k];if(v===DEL)delete base[k];else if(isObj(v)){if(!isObj(base[k]))base[k]={};applyPatch(base[k],v)}else base[k]=v}return base}
 function overlay(base,patch){for(const k of Object.keys(patch)){const v=patch[k];if(isObj(v)){if(!isObj(base[k]))base[k]={};overlay(base[k],v)}else base[k]=v}return base}
 function missing(remote,local){const out={};for(const k of Object.keys(local||{})){const l=local[k],r=remote?remote[k]:undefined;if(isObj(l)){const m=missing(isObj(r)?r:{},l);if(hasKeys(m))out[k]=m}else if(r===undefined)out[k]=l}return out}
-function norm(x){const o=Object.assign({bud:{},tot:{},used0:{},m:{},d:{},sav:{},debt:{},sim:{}},x||{});
+function norm(x){const o=Object.assign({bud:{},tot:{},used0:{},m:{},d:{},sav:{},debt:{},sim:{},plan:{}},x||{});
  if(Array.isArray(o.debt)){const n={};o.debt.forEach((e,i)=>{n['o'+i]=Object.assign({ts:i},e)});o.debt=n}
- for(const k of ['bud','tot','used0','m','d','sav','debt','sim'])if(!isObj(o[k]))o[k]={};return o}
+ for(const k of ['bud','tot','used0','m','d','sav','debt','sim','plan'])if(!isObj(o[k]))o[k]={};return o}
 function toFS(p,del){const o={};for(const k of Object.keys(p)){const v=p[k];o[k]=v===DEL?del():isObj(v)?toFS(v,del):v}return o}
 function parseCfg(t){const c={},ok=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId','measurementId'],re=/["']?(\w+)["']?\s*:\s*["']([^"']*)["']/g;let m;while((m=re.exec(t||''))){if(ok.includes(m[1]))c[m[1]]=m[2]}return c}
 /*PURE-END*/
@@ -283,6 +284,8 @@ const dBud=s=>D.bud[dKey(s)]??({wd:444,sat:2000,sun:2000})[dKey(s)];
 const bdg=(g,n,d)=>D.bud[g+'.'+n]??d;
 
 function S(t,k,v){
+  if(t[0]=='p'&&t.length==2){const P=planP(),e=String(v).trim()==='',n=+v||0;
+    if(t=='pi')W(['plan',P,'inc'],e?DEL:n);else if(t=='pr')W(['plan',P,'r',k],e?DEL:n);else W(['plan',P,{pe:'e',pb:'b',pg:'g',px:'x'}[t],k],e?DEL:n);render();return}
   if(t=='sb'||t=='sg'||t=='sx'){const f={sb:'b',sg:'g',sx:'x'}[t];W(['sim',f,k],String(v).trim()===''?DEL:(+v||0));render();return}
   v=+v||0;const M=ym(cur);
   if(t=='bud')W(['bud',k],v);
@@ -474,7 +477,7 @@ function sim(){
   const{rows,P,today}=simRows(),wk=['อา','จ','อ','พ','พฤ','ศ','ส'];
   const tg=rows.reduce((t,x)=>t+x.g,0),tx=rows.reduce((t,x)=>t+x.x,0),last=rows.length?rows[rows.length-1].l:0;
   const neg=rows.find(x=>x.l<0),mn=rows.reduce((m,x)=>Math.min(m,x.l),Infinity);
-  let h=`<div class="nv"><b style="flex:1">🧮 Simulate · ${plab(P)}</b></div>`;
+  let h=`<div class="nv"><b style="flex:1">🧮 Simulate · ${plab(P)}</b><button class="btn" onclick="setTab('plan')">📅 Planning</button></div>`;
   h+=card(`<div class="r"><b>เงินเหลือสิ้นรอบ (24)</b><b style="color:${col(last)}">${lfm(last)} ฿</b></div>
    <div class="r"><span>รับเพิ่มที่ใส่ไว้</span><b>${fmt2(tg)}</b></div>
    <div class="r"><span>ใช้จ่ายที่วางแผน (${rows.length} วัน)</span><b>${fmt2(tx)}</b></div>
@@ -490,10 +493,55 @@ function sim(){
     +`<div class="r" style="margin-top:10px"><button class="btn c" style="flex:1" onclick="SR()">รีเซ็ตค่าที่แก้ทั้งหมด</button></div>`);
   return h;
 }
+/* ---------- หน้า Planning (วางแผนรอบหน้า 25–24) เข้าจากปุ่มในหน้า Simulate ---------- */
+const planP=()=>{const P=pOf(new Date()),[y,m]=pParts(P);return ym(new Date(y,m+1,1))};
+const PR={wd:580,we:2000};
+function planCalc(){
+  const P=planP(),pl=(D.plan||{})[P]||{},E=pl.e||{},B=pl.b||{},Gt=pl.g||{},X=pl.x||{},R=pl.r||{};
+  const curP=pOf(new Date()),incDef=sum(mo(curP).inc),inc=pl.inc!==undefined?(+pl.inc||0):incDef;
+  const grp=G.map(([g,items])=>{const it=items.map(([n,d])=>{const k=g+'.'+n,ed=E[k]!==undefined;return{n,k,v:ed?(+E[k]||0):bdg(g,n,d),ed}});return{g,it,t:it.reduce((a,x)=>a+x.v,0)}});
+  const fix=grp.reduce((a,x)=>a+x.t,0),after=inc-fix;
+  const rw=R.wd!==undefined?+R.wd||0:PR.wd,re=R.we!==undefined?+R.we||0:PR.we;
+  let bal=after;const rows=[];
+  pDays(P).forEach((k,i)=>{const w=dt(k).getDay(),eb=B[k]!==undefined,eg=Gt[k]!==undefined,ex=X[k]!==undefined;
+    const b=eb?(+B[k]||0):i==0?after:bal,g=+Gt[k]||0,x=ex?(+X[k]||0):(w==0||w==6?re:rw),l=r2(b+g-x);
+    rows.push({k,b,g,x,l,eb,eg,ex,w});bal=l});
+  return{P,pl,inc,incEd:pl.inc!==undefined,incDef,grp,fix,after,rw,re,R,rows,save:rows.length?rows[rows.length-1].l:after};
+}
+function planning(){
+  const c=planCalc(),wk=['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const tg=c.rows.reduce((t,x)=>t+x.g,0),tx=c.rows.reduce((t,x)=>t+x.x,0);
+  let h=`<div class="nv"><button class="btn" onclick="setTab('sim')">‹</button><b style="flex:1;text-align:center">📅 Planning · ${plab(c.P)}</b><span style="width:34px"></span></div>`;
+  /* 1 รายได้หลัก */
+  h+=card(`<div class="r pl"><b>💰 รายได้หลัก</b>${SIMX('pi','inc',c.incEd?c.inc:'',c.incEd,fmt(c.incDef))}</div><div class="mut">ค่าเริ่มต้น = รายรับรวมของรอบปัจจุบัน (${fmt(c.incDef)}) แก้ได้เลย ล้างช่องเพื่อกลับเป็นค่าเริ่มต้น</div>`);
+  /* 2–4 Fixed / Utilities / Pay */
+  c.grp.forEach(({g,it,t},gi)=>{
+    h+=`<div class="card pl" style="background:linear-gradient(145deg,#fdfdfe,${GC[gi]}22)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span class="ic" style="background:${GC[gi]}">${GI[g]}</span><b>จ่าย: ${g}</b><b style="margin-left:auto">${fmt2(t)}</b></div>`
+      +it.map(x=>`<div class="r">${rI(x.n)}<span>${x.n}</span>${SIMX('pe',x.k,x.ed?x.v:'',x.ed,fmt(x.v))}</div>`).join('')+`</div>`;
+  });
+  /* 5 หัก Fixed */
+  h+=card(`<div class="r"><span>รายได้หลัก</span><b>${fmt2(c.inc)}</b></div>`+c.grp.map(x=>`<div class="r mut"><span>− ${x.g}</span><span>${fmt2(x.t)}</span></div>`).join('')
+    +`<div class="dv"></div><div class="r"><b>✂️ หัก Fixed เหลือ</b><b style="color:${col(c.after)}">${lfm(c.after)} ฿</b></div>`);
+  /* 6 Daily */
+  let t=`<div class="pr"><label>งบ จ–ศ / วัน${SIMX('pr','wd',c.R.wd!==undefined?c.rw:'',c.R.wd!==undefined,PR.wd)}</label><label>งบ ส–อา / วัน${SIMX('pr','we',c.R.we!==undefined?c.re:'',c.R.we!==undefined,PR.we)}</label></div>`;
+  t+=`<div class="sg hd"><span></span><span>Bud</span><span>get</span><span>spend</span><span>Left</span></div>`;
+  c.rows.forEach((x,i)=>{
+    const d=dt(x.k),first=d.getDate()==1||i==0,we=x.w==0||x.w==6,ln=i>0&&(x.w==6||x.w==1);
+    t+=`<div class="sg ${we?'we':''} ${ln?'ln':''}"><span class="dy">${d.getDate()}<small>${first?sh(d):wk[x.w]}</small></span>`
+      +SIMX('pb',x.k,r2(x.b),x.eb)+SIMX('pg',x.k,x.eg?x.g:'',x.eg)+SIMX('px',x.k,r2(x.x),x.ex)
+      +`<span class="lf" style="color:${x.l<0?'#c0584a':'var(--ink)'}">${lfm(x.l)}</span></div>`;
+  });
+  h+=card(`<div class="r"><b>📅 Daily</b><span class="mut">รับเพิ่ม ${fmt2(tg)} · ใช้ ${fmt2(tx)}</span></div><div class="mut" style="margin-bottom:8px">Bud วันแรก = ยอดหัก Fixed เหลือ ถัดไป Bud = Left วันก่อน · spend ตามงบรายวัน ช่องที่แก้เองเป็นสีเหลือง ล้างช่องเพื่อกลับเป็นค่าอัตโนมัติ</div>`+t);
+  /* 7 Saving */
+  h+=card(`<div class="r"><b>🐷 Saving (เหลือเก็บสิ้นรอบ ${pEnd(c.P).getDate()} ${sh(pEnd(c.P))})</b><b style="font-size:20px;color:${col(c.save)}">${lfm(c.save)} ฿</b></div>`
+    +`<div class="r" style="margin-top:10px"><button class="btn c" style="flex:1" onclick="PRS()">รีเซ็ตค่าที่แก้ใน Planning</button></div>`);
+  return h;
+}
+function PRS(){if(!confirm('ล้างค่าที่แก้ใน Planning รอบนี้ทั้งหมด?'))return;W(['plan',planP()],DEL);render()}
 function SR(){if(!confirm('ล้างค่าที่แก้ใน Simulate ทั้งหมด?'))return;W(['sim'],DEL);render()}
 let lastDay=ymd(new Date());
-setInterval(()=>{const d=ymd(new Date());if(d!==lastDay){lastDay=d;if(tab=='sim')render()}},30000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){const d=ymd(new Date());if(d!==lastDay){lastDay=d;if(tab=='sim')render()}}});
+setInterval(()=>{const d=ymd(new Date());if(d!==lastDay){lastDay=d;if(tab=='sim'||tab=='plan')render()}},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){const d=ymd(new Date());if(d!==lastDay){lastDay=d;if(tab=='sim'||tab=='plan')render()}}});
 
 /* ---------- วาดหน้าจอ (อัปเดตเฉพาะส่วนที่เปลี่ยน ไม่ทำให้ช่องกรอกหลุดโฟกัส) ---------- */
 function morphKids(a,b){
@@ -513,11 +561,11 @@ function morph(p,a,b){
   morphKids(a,b);
 }
 function render(){
-  const app=document.getElementById('app'),html=tab=='ov'?ov():tab=='mo'?monthly():tab=='sim'?sim():saving();
+  const app=document.getElementById('app'),html=tab=='ov'?ov():tab=='mo'?monthly():tab=='sim'?sim():tab=='plan'?planning():saving();
   if(app.childNodes.length&&app.dataset.tab===tab){const tmp=document.createElement('div');tmp.innerHTML=html;morphKids(app,tmp)}
   else app.innerHTML=html;
   app.dataset.tab=tab;
-  document.getElementById('tabs').innerHTML=[['ov','Over View'],['mo','Monthly'],['sv','Saving'],['sim','Simulate']].map(([k,l])=>`<button class="${tab==k?'on':''}" onclick="setTab('${k}')">${l}</button>`).join('');
+  document.getElementById('tabs').innerHTML=[['ov','Over View'],['mo','Monthly'],['sv','Saving'],['sim','Simulate']].map(([k,l])=>`<button class="${tab==k||(k=='sim'&&tab=='plan')?'on':''}" onclick="setTab('${k}')">${l}</button>`).join('');
   status();
 }
 boot();
