@@ -61,7 +61,7 @@ input[type=date]{border:1px solid #fff;border-radius:999px;padding:8px 12px;back
 .tabs button{border:0;background:none;border-radius:999px;padding:11px 14px;font-size:14px;color:var(--mut);white-space:nowrap}
 .sg{display:grid;grid-template-columns:30px 1.2fr .75fr .8fr 1.1fr;gap:3px;align-items:center;padding:3px 2px}
 .sg.hd{font-size:12px;color:var(--mut);text-align:center;font-weight:600}
-.sg input.n{width:100%;min-width:0;padding:7px 5px;font-size:12.5px;border-radius:12px}.sg input.n::placeholder{color:#c2c6cd}.sg input.n.e{background:#fff4c9}
+.sg input.n{width:100%;min-width:0;padding:7px 5px;font-size:12.5px;border-radius:12px}.sg input.n::placeholder{color:#c2c6cd}.sg input.n.e{background:#fff4c9}.sg input.n.ro{background:#e9ecf0;color:#4a4f58;border-style:dashed}
 .sg .dy{text-align:center;font-size:15px;line-height:1.1}.sg .dy small{display:block;font-size:10px;color:var(--mut)}
 .sg .lf{text-align:right;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;padding-right:4px;white-space:nowrap}
 .sg.we{background:rgba(255,255,255,.4);border-radius:12px}.sg.ln{border-top:1.5px solid #9aa0aa;margin-top:3px;padding-top:6px;border-radius:0}.sg.td{background:#fdf1c4;border-radius:12px}
@@ -85,7 +85,7 @@ textarea{width:100%;min-height:130px;margin:8px 0;border-radius:16px;border:1px 
   <textarea id="cfgin" placeholder='apiKey: "...",&#10;authDomain: "...",&#10;projectId: "...",&#10;appId: "..."'></textarea>
   <div class="r"><button class="btn p" style="flex:1" onclick="connect()">เชื่อมต่อ / กู้คืนข้อมูล</button><button class="btn" onclick="disconnect()">ยกเลิกการเชื่อมต่อ</button></div>
   <button class="btn" style="width:100%;margin-top:8px" onclick="XL()">📊 ส่งออกเป็นไฟล์ Excel</button>
-  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-13 · รอบ 25–24 · Excel · Simulate อัตโนมัติ · Planning</div>
+  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-13 · รอบ 25–24 · Excel · Simulate อัตโนมัติ · Planning · 2026-11-16</div>
 </div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -286,6 +286,7 @@ const bdg=(g,n,d)=>D.bud[g+'.'+n]??d;
 function S(t,k,v){
   if(t[0]=='p'&&t.length==2){const P=planP(),e=String(v).trim()==='',n=+v||0;
     if(t=='pi')W(['plan',P,'inc'],e?DEL:n);else if(t=='pr')W(['plan',P,'r',k],e?DEL:n);else W(['plan',P,{pe:'e',pb:'b',pg:'g',px:'x'}[t],k],e?DEL:n);render();return}
+  if(t=='tb'||t=='tx'){const today=ymd(new Date()),sm=D.sim||{};if(!sm.t||sm.t.d!=today)W(['sim','t'],{d:today});W(['sim','t',t[1]],String(v).trim()===''?DEL:(+v||0));render();return}
   if(t=='sb'||t=='sg'||t=='sx'){const f={sb:'b',sg:'g',sx:'x'}[t];W(['sim',f,k],String(v).trim()===''?DEL:(+v||0));render();return}
   v=+v||0;const M=ym(cur);
   if(t=='bud')W(['bud',k],v);
@@ -456,25 +457,32 @@ function saving(){
 
 
 /* ---------- แท็บ Simulate (วางแผนเงินรายวัน เริ่มจากวันนี้ถึงวันที่ 24) ---------- */
-const SIMX=(t,k,v,e,ph)=>`<input class="n ${e?'e':''}" type="number" inputmode="decimal" step="any" value="${v}" placeholder="${ph||0}" oninput="LI(this,'${t}','${k}')" onchange="CH(this,'${t}','${k}')">`;
+const SIMX=(t,k,v,e,ph,ro)=>ro?`<input class="n ro" type="number" value="${v}" readonly tabindex="-1">`:`<input class="n ${e?'e':''}" type="number" inputmode="decimal" step="any" value="${v}" placeholder="${ph||0}" oninput="LI(this,'${t}','${k}')" onchange="CH(this,'${t}','${k}')">`;
 const r2=v=>Math.round(v*100)/100;
 const lfm=v=>v<0?'('+fmt2(-v)+')':fmt2(v);
 function simRows(){
-  const nd=new Date(),today=ymd(nd),P=pOf(nd),end=ymd(pEnd(P)),sm=D.sim||{},B=sm.b||{},Gt=sm.g||{},X=sm.x||{};
-  const ks=[...Object.keys(B),...Object.keys(Gt),...Object.keys(X)].filter(k=>/^\d{4}-\d\d-\d\d$/.test(k)&&k<=end);
-  let st=[today,...ks].reduce((a,b)=>a<b?a:b);const ps=ymd(pStart(P));if(st<ps)st=ps;
+  const nd=new Date(),today=ymd(nd),P=pOf(nd),end=ymd(pEnd(P)),sm=D.sim||{},B=sm.b||{},Gt=sm.g||{},X=sm.x||{},TT=(sm.t&&sm.t.d==today)?sm.t:{};
   let bal=0;const rows=[];
-  for(let d=dt(st);ymd(d)<=end;d.setDate(d.getDate()+1)){
-    const k=ymd(d),eb=B[k]!==undefined,eg=Gt[k]!==undefined,ex=X[k]!==undefined;
-    const f1=k>=today&&!rows.length;/* แถวแรก (วันนี้): Bud = รายรับรวมของรอบ, spend = งบวันนี้ที่ยังไม่ได้ใช้ อัตโนมัติ */
-    const b=eb?(+B[k]||0):f1?sum(mo(P).inc):bal,g=+Gt[k]||0,x=ex?(+X[k]||0):f1?Math.max(0,dBud(k)-sum(dayE(k))):dBud(k),l=r2(b+g-x);
-    if(k>=today)rows.push({k,b,g,x,l,eb,eg,ex,w:d.getDay()});
+  for(let d=dt(today);ymd(d)<=end;d.setDate(d.getDate()+1)){
+    const k=ymd(d),f1=!rows.length;
+    /* แถวแรก (วันนี้): ค่าเริ่มต้นดึงสด Bud = รายรับรวม (Overview), spend = งบ Daily วันนี้ที่ยังเหลือ
+       แก้เองได้ระหว่างวัน (เก็บใน sim.t พร้อมวันที่) ข้ามวันแล้วกลับเป็นค่าดึงสดเอง */
+    const lb=sum(mo(P).inc),lx=Math.max(0,dBud(k)-sum(dayE(k)));
+    const eb=f1?TT.b!==undefined:B[k]!==undefined,eg=Gt[k]!==undefined,ex=f1?TT.x!==undefined:X[k]!==undefined;
+    const b=f1?(eb?(+TT.b||0):lb):eb?(+B[k]||0):bal,g=+Gt[k]||0,x=f1?(ex?(+TT.x||0):lx):ex?(+X[k]||0):dBud(k),l=r2(b+g-x);
+    rows.push({k,b,g,x,l,eb,eg,ex,f1,lb,lx,w:d.getDay()});
     bal=l;
   }
   return{rows,P,today};
 }
+/* ล้างค่าที่เคยแก้ไว้ของวันที่ผ่านไปแล้ว และ Bud/spend ของวันนี้ (แถวแรกดึงสดแล้ว) */
+function simClean(today){
+  const sm=D.sim||{};
+  ['b','g','x'].forEach(f=>Object.keys(sm[f]||{}).forEach(k=>{if(k<today||(k==today&&f!='g'))W(['sim',f,k],DEL)}));
+  if(sm.t&&sm.t.d!=today)W(['sim','t'],DEL);
+}
 function sim(){
-  const{rows,P,today}=simRows(),wk=['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const{rows,P,today}=simRows();simClean(today);const wk=['อา','จ','อ','พ','พฤ','ศ','ส'];
   const tg=rows.reduce((t,x)=>t+x.g,0),tx=rows.reduce((t,x)=>t+x.x,0),last=rows.length?rows[rows.length-1].l:0;
   const neg=rows.find(x=>x.l<0),mn=rows.reduce((m,x)=>Math.min(m,x.l),Infinity);
   let h=`<div class="nv"><b style="flex:1">🧮 Simulate · ${plab(P)}</b><button class="btn" onclick="setTab('plan')">📅 Planning</button></div>`;
@@ -486,10 +494,10 @@ function sim(){
   rows.forEach((x,i)=>{
     const d=dt(x.k),first=d.getDate()==1||i==0,we=x.w==0||x.w==6,ln=i>0&&(x.w==6||x.w==1);
     t+=`<div class="sg ${we?'we':''} ${ln?'ln':''} ${x.k==today?'td':''}"><span class="dy">${d.getDate()}<small>${first?sh(d):wk[x.w]}</small></span>`
-      +SIMX('sb',x.k,r2(x.b),x.eb)+SIMX('sg',x.k,x.eg?x.g:'',x.eg)+SIMX('sx',x.k,r2(x.x),x.ex)
+      +(x.f1?SIMX('tb',x.k,x.eb?x.b:'',x.eb,fmt(x.lb)):SIMX('sb',x.k,r2(x.b),x.eb))+SIMX('sg',x.k,x.eg?x.g:'',x.eg)+(x.f1?SIMX('tx',x.k,x.ex?x.x:'',x.ex,fmt(x.lx)):SIMX('sx',x.k,r2(x.x),x.ex))
       +`<span class="lf" style="color:${x.l<0?'#c0584a':'var(--ink)'}">${lfm(x.l)}</span></div>`;
   });
-  h+=card(`<div class="mut" style="margin-bottom:6px">ลองกรอกเพื่อวางแผน ช่องที่แก้เองจะเป็นสีเหลือง ล้างช่องให้ว่างเพื่อกลับเป็นค่าอัตโนมัติ แถวแรกดึงอัตโนมัติ: Bud = รายรับรวมของรอบนี้, spend = งบวันนี้ที่ยังไม่ได้ใช้ (แก้เองได้) แถวถัดไป Bud = Left ของวันก่อน, spend ตามงบรายวันที่ตั้งไว้ วันที่ผ่านไปแล้วจะหายไปเอง</div>`+t
+  h+=card(`<div class="mut" style="margin-bottom:6px">ลองกรอกเพื่อวางแผน ช่องที่แก้เองจะเป็นสีเหลือง ล้างช่องให้ว่างเพื่อกลับเป็นค่าอัตโนมัติ แถวแรก (วันนี้) ดึงสดอัตโนมัติ: Bud = รายรับรวมใน Overview, spend = งบ Daily วันนี้ที่ยังเหลือ ถ้าไม่ตรงแก้เองได้ ค่าที่แก้ใช้แค่วันนี้ พรุ่งนี้กลับเป็นค่าดึงสดเอง แถวถัดไป Bud = Left ของวันก่อน, spend ตามงบรายวันที่ตั้งไว้ วันที่ผ่านไปแล้วจะหายไปเอง</div>`+t
     +`<div class="r" style="margin-top:10px"><button class="btn c" style="flex:1" onclick="SR()">รีเซ็ตค่าที่แก้ทั้งหมด</button></div>`);
   return h;
 }
