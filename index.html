@@ -66,14 +66,21 @@ input[type=date]{border:1px solid #fff;border-radius:999px;padding:8px 12px;back
 .sg .lf{text-align:right;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;padding-right:4px;white-space:nowrap}
 .sg.we{background:rgba(255,255,255,.4);border-radius:12px}.sg.ln{border-top:1.5px solid #9aa0aa;margin-top:3px;padding-top:6px;border-radius:0}.sg.td{background:#fdf1c4;border-radius:12px}
 .tabs button.on{background:linear-gradient(180deg,#f7dc7a,#e8b93f);color:var(--ink);font-weight:600;box-shadow:0 3px 8px rgba(200,150,30,.4)}
-.top{display:flex;justify-content:space-between;align-items:center;padding:4px 6px}
+.top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;padding:4px 6px}
 .mbg{position:fixed;inset:0;background:rgba(20,22,26,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
 .mbg.show{display:flex}.mbg .card{background:#f3f5f8;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;margin:0}
 textarea{width:100%;min-height:130px;margin:8px 0;border-radius:16px;border:1px solid #fff;background:rgba(255,255,255,.9);padding:10px;font-size:13px;box-shadow:inset 0 2px 4px rgba(0,0,0,.09)}
+input.t,select.t{font-size:15px;border-radius:999px;border:1px solid #fff;background:rgba(255,255,255,.8);padding:8px 12px;box-shadow:inset 0 2px 4px rgba(0,0,0,.09);min-width:0;outline:0}
+.btn.y{background:linear-gradient(180deg,#f7dc7a,#e8b93f)}.btn.s{padding:7px 12px;font-size:13px}
+.tg.yy{background:#e8b93f;color:var(--ink)}
+.cd.fx{outline:2px solid #e8b93f;outline-offset:-2px}
+.stp{display:flex;align-items:center;gap:8px;margin:14px 0 4px;font-weight:700}.stp em{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#f7dc7a,#e8b93f);font-size:13px}
+.frm{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.frm input,.frm select{width:100%}.frm .w2{grid-column:span 2}.frm label{font-size:12px;color:var(--mut)}
+.fxr{gap:6px}.fxr input.n{width:78px;padding:8px 8px;font-size:14px}
 </style>
 </head>
 <body>
-<div class="top"><b style="font-size:20px">รายรับ รายจ่าย</b><span style="display:flex;gap:8px"><button class="btn" id="xb" onclick="XL()">📊 Excel</button><button class="btn" id="st" onclick="SM(1)">⚙️</button></span></div>
+<div class="top"><b style="font-size:20px">รายรับ รายจ่าย</b><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn s y" onclick="PM(1)">⚙️ Preset</button><button class="btn s" id="xb" onclick="XL()">📊 Excel</button><button class="btn s" id="st" onclick="SM(1)">⚙️</button></span></div>
 <div id="app"></div>
 <div class="tabs" id="tabs"></div>
 
@@ -84,8 +91,10 @@ textarea{width:100%;min-height:130px;margin:8px 0;border-radius:16px;border:1px 
   <textarea id="cfgin" placeholder='apiKey: "...",&#10;authDomain: "...",&#10;projectId: "...",&#10;appId: "..."'></textarea>
   <div class="r"><button class="btn p" style="flex:1" onclick="connect()">เชื่อมต่อ / กู้คืนข้อมูล</button><button class="btn" onclick="disconnect()">ยกเลิกการเชื่อมต่อ</button></div>
   <button class="btn" style="width:100%;margin-top:8px" onclick="XL()">📊 ส่งออกเป็นไฟล์ Excel</button>
-  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-17 · รอบ 25–24 · Excel · Simulate อัตโนมัติ</div>
+  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-20 · รอบ 25–24 · Excel · Simulate อัตโนมัติ · Preset</div>
 </div></div>
+
+<div class="mbg" id="pm" onclick="if(event.target===this)PM(0)"><div class="card" id="pmb"></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -106,6 +115,12 @@ const p2=n=>String(n).padStart(2,'0');
 const ym=d=>d.getFullYear()+'-'+p2(d.getMonth()+1);
 const ymd=d=>ym(d)+'-'+p2(d.getDate());
 const dt=s=>new Date(s+'T00:00');
+const nid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cln=s=>String(s).replace(/['"\\<>&`]/g,'').trim();
+const V=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+const VN=id=>+String(V(id)).replace(/,/g,'')||0;
+const clr=(...ids)=>ids.forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
 const thm=d=>d.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
 /* รอบเดือน: เริ่มวันที่ 25 จบวันที่ 24 ของเดือนถัดไป (ตรงกับวันเงินเดือนออก)
    รหัสรอบ = ปี-เดือนที่เริ่ม เช่น 2026-10 คือ 25 ต.ค. – 24 พ.ย. */
@@ -130,9 +145,9 @@ function delIn(o,path){let c=o;for(let i=0;i<path.length-1;i++){c=c[path[i]];if(
 function applyPatch(base,patch){for(const k of Object.keys(patch)){const v=patch[k];if(v===DEL)delete base[k];else if(isObj(v)){if(!isObj(base[k]))base[k]={};applyPatch(base[k],v)}else base[k]=v}return base}
 function overlay(base,patch){for(const k of Object.keys(patch)){const v=patch[k];if(isObj(v)){if(!isObj(base[k]))base[k]={};overlay(base[k],v)}else base[k]=v}return base}
 function missing(remote,local){const out={};for(const k of Object.keys(local||{})){const l=local[k],r=remote?remote[k]:undefined;if(isObj(l)){const m=missing(isObj(r)?r:{},l);if(hasKeys(m))out[k]=m}else if(r===undefined)out[k]=l}return out}
-function norm(x){const o=Object.assign({bud:{},tot:{},used0:{},m:{},d:{},sav:{},debt:{},sim:{}},x||{});
+function norm(x){const o=Object.assign({bud:{},tot:{},used0:{},m:{},d:{},sav:{},debt:{},sim:{},set:{},yfix:{},cr:{}},x||{});
  if(Array.isArray(o.debt)){const n={};o.debt.forEach((e,i)=>{n['o'+i]=Object.assign({ts:i},e)});o.debt=n}
- for(const k of ['bud','tot','used0','m','d','sav','debt','sim'])if(!isObj(o[k]))o[k]={};return o}
+ for(const k of ['bud','tot','used0','m','d','sav','debt','sim','set','yfix','cr'])if(!isObj(o[k]))o[k]={};return o}
 function toFS(p,del){const o={};for(const k of Object.keys(p)){const v=p[k];o[k]=v===DEL?del():isObj(v)?toFS(v,del):v}return o}
 function parseCfg(t){const c={},ok=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId','measurementId'],re=/["']?(\w+)["']?\s*:\s*["']([^"']*)["']/g;let m;while((m=re.exec(t||''))){if(ok.includes(m[1]))c[m[1]]=m[2]}return c}
 /*PURE-END*/
@@ -215,7 +230,7 @@ function xlsBook(X){
   const P=[...ps].filter(x=>/^\d{4}-\d{2}$/.test(x)).sort();
   const n=v=>+v||0,wb=X.utils.book_new();
   const add=(name,rows,w)=>{const ws=X.utils.aoa_to_sheet(rows);ws['!cols']=w.map(x=>({wch:x}));X.utils.book_append_sheet(wb,ws,name)};
-  const ge=(m,g)=>G.find(a=>a[0]==g)[1].reduce((t,[nm])=>t+n(m.exp[g+'.'+nm]),0);
+  const ge=(m,g)=>G.find(a=>a[0]==g)[1].reduce((t,[nm])=>t+n(m.exp[g+'.'+nm]),0)+(g=='Fixed'?Object.keys(m.exp).filter(k=>k.startsWith('y:')).reduce((t,k)=>t+n(m.exp[k]),0):0);
   /* 1 สรุปรายรอบ */
   const r1=[['รอบ','เริ่ม','สิ้นสุด','รายรับ','Fixed','Utilities','Pay','Daily','รายจ่ายรวม','เหลือ (รับ−จ่าย)','Saving']];
   P.forEach(k=>{const m=mo(k),ex=expTot(k),inc=sum(m.inc);
@@ -229,6 +244,7 @@ function xlsBook(X){
   /* 3 รายจ่ายประจำ */
   const r3=[['รอบ','กลุ่ม','รายการ','งบ','ใช้จริง','ยังไม่จ่าย']];
   P.forEach(k=>{const m=mo(k);G.forEach(([g,its])=>its.forEach(([nm,d])=>{const b=bdg(g,nm,d),a=n(m.exp[g+'.'+nm]);r3.push([plab(k),g,nm,b,a,a>0?0:b])}))});
+  P.forEach(k=>{const m=mo(k);yfRows(k).forEach(y=>{const a=n(m.exp[y.k]);r3.push([plab(k),'Fixed (ก้อนใหญ่)',y.n,y.b,a,a>0?0:y.b])})});
   add('รายจ่ายประจำ',r3,[26,10,12,10,10,12]);
   /* 4 รายวัน */
   const cols=[];[WD,WE].forEach(t=>t.forEach(([g,its])=>its.forEach(i=>{const key=g+'.'+i;if(!cols.includes(key))cols.push(key)})));
@@ -244,10 +260,13 @@ function xlsBook(X){
   add('Saving',r5,[26,...SAV.map(()=>10),12]);
   /* 6 Debt */
   const r6=[['บัญชี','วงเงิน/ยอดหนี้','ยอดตั้งต้น','กู้เพิ่ม','จ่ายเพิ่ม','ใช้แล้ว','เหลือ']];
-  DEBTS.forEach(([a,def])=>{const L=Object.values(D.debt||{}).filter(x=>x.a==a),ad=L.filter(x=>x.t!='pay').reduce((t,x)=>t+n(x.v),0),pd=L.filter(x=>x.t=='pay').reduce((t,x)=>t+n(x.v),0),lim=D.tot[a]??def,u0=n(D.used0[a]);r6.push([a,lim,u0,ad,pd,u0+ad-pd,lim-(u0+ad-pd)])});
+  DL().forEach(([a,def])=>{const L=Object.values(D.debt||{}).filter(x=>x.a==a),ad=L.filter(x=>x.t!='pay').reduce((t,x)=>t+n(x.v),0),pd=L.filter(x=>x.t=='pay').reduce((t,x)=>t+n(x.v),0),lim=D.tot[a]??def,u0=n(D.used0[a]);r6.push([a,lim,u0,ad,pd,u0+ad-pd,lim-(u0+ad-pd)])});
   r6.push([],['รายการเคลื่อนไหว'],['บัญชี','ประเภท','จำนวน','วันที่']);
   Object.values(D.debt||{}).sort((p,q)=>(p.ts||0)-(q.ts||0)).forEach(x=>r6.push([x.a,x.t=='pay'?'จ่ายเพิ่ม':'กู้เพิ่ม',n(x.v),x.date||'']));
   add('Debt',r6,[14,16,12,12,12,14,12]);
+  const r7=[['รายการ','จำนวนเงิน','ครบกำหนด','เตือนล่วงหน้า (วัน)']];
+  Object.values(D.yfix||{}).filter(x=>x&&x.n&&!x.del).sort((p,q)=>(p.mo-q.mo)||(p.day-q.day)).forEach(x=>r7.push([x.n,n(x.v),x.day+'/'+x.mo,n(x.rem)]));
+  add('Fix ก้อนใหญ่ประจำปี',r7,[22,12,12,18]);
   return wb;
 }
 function XL(){
@@ -273,14 +292,39 @@ const mo=M=>{const x=D.m[M]||{};return{inc:x.inc||{},exp:x.exp||{}}};
 /* ค่าเดินทางประจำ จันทร์–ศุกร์: นับให้อัตโนมัติตั้งแต่ AUTO_FROM ถึงวันนี้ (ถ้าแก้/กรอกช่องไหนในวันนั้น ใช้ค่าที่กรอกแทน) */
 const AUTO_FROM='2026-11-04';
 const AUTO={'ค่าเดินทาง.Motorcycle เช้า':40,'ค่าเดินทาง.MRT เช้า':22,'ค่าเดินทาง.Van':35,'ค่าเดินทาง.BTS เช้า':59,'ค่าเดินทาง.BTS เย็น':58,'ค่าเดินทาง.MRT เย็น':22,'ค่าเดินทาง.Express':35};
-const isAuto=k=>{const w=dt(k).getDay();return w>0&&w<6&&k>=AUTO_FROM&&k<=ymd(new Date())};
-const dayE=k=>{const e=D.d[k]||{};return isAuto(k)?Object.assign({},AUTO,e):e};
-const dayKeys=()=>{const s=new Set(Object.keys(D.d));const t=ymd(new Date());for(let d=dt(AUTO_FROM);ymd(d)<=t;d.setDate(d.getDate()+1))if(isAuto(ymd(d)))s.add(ymd(d));return[...s].sort()};
+/* รายการ Daily วันทำงาน (จ–ศ): ถ้ายังไม่เคยแก้ใน Preset ใช้ค่าเริ่มต้นเดิม (WD + AUTO) ถ้าแก้แล้วใช้ค่าที่ตั้งใน D.set.wd */
+const DG=[['ค่าเดินทาง','🚌'],['ค่ากิน','🍽️'],['ใช้จ่ายอื่นๆ','🛍️']];
+function WDL(){
+  if(!D.set.dinit){const o=[];let i=0;WD.forEach(([g,its])=>its.forEach(n=>{const k=g+'.'+n;o.push({id:'w'+(i++),k,g,n,def:AUTO[k]||0})}));return o}
+  return Object.entries(D.set.wd||{}).filter(([id,x])=>x&&!x.del&&x.k).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0)).map(([id,x])=>({id,k:x.k,g:x.g||DG[2][0],n:x.n||x.k,def:+x.def||0}));
+}
+const autoMap=()=>{const o={};WDL().forEach(x=>{if(x.def>0)o[x.k]=x.def});return o};
+const afrom=()=>D.set.dfrom||AUTO_FROM;
+const isAuto=k=>{const w=dt(k).getDay();return w>0&&w<6&&k>=afrom()&&k<=ymd(new Date())};
+const dayE=k=>{const e=D.d[k]||{};return isAuto(k)?Object.assign({},autoMap(),e):e};
+const dayKeys=()=>{const s=new Set(Object.keys(D.d));const t=ymd(new Date());for(let d=dt(afrom());ymd(d)<=t;d.setDate(d.getDate()+1))if(isAuto(ymd(d)))s.add(ymd(d));return[...s].sort()};
 const daySum=M=>{const a=ymd(pStart(M)),b=ymd(pEnd(M));return dayKeys().filter(k=>k>=a&&k<=b).reduce((s,k)=>s+sum(dayE(k)),0)};
 const expTot=M=>sum(mo(M).exp)+daySum(M);
 const dKey=s=>{const w=dt(s).getDay();return w==0?'sun':w==6?'sat':'wd'};
 const dBud=s=>D.bud[dKey(s)]??({wd:444,sat:2000,sun:2000})[dKey(s)];
 const bdg=(g,n,d)=>D.bud[g+'.'+n]??d;
+/* Fix ก้อนใหญ่ประจำปี: อยู่ในรอบ (25–24) ที่มีวันครบกำหนด รวมเข้ากลุ่ม Fixed */
+function yfRows(P){
+  const a=pStart(P),b=pEnd(P),r=[];
+  Object.entries(D.yfix||{}).filter(([id,x])=>x&&x.n).sort((p,q)=>(p[1].ts||0)-(q[1].ts||0)).forEach(([id,x])=>{
+    if((x.from&&P<x.from)||(x.del&&P>=x.del))return;
+    for(const y of new Set([a.getFullYear(),b.getFullYear()])){
+      const dm=new Date(y,+x.mo,0).getDate(),d=new Date(y,+x.mo-1,Math.min(+x.day||1,dm));
+      if(d>=a&&d<=b){r.push({k:'y:'+id,id,n:x.n,b:+x.v||0,date:d});break}
+    }
+  });
+  return r;
+}
+/* เจ้าหนี้: BBL / Line BK เดิม + ที่เพิ่มใน Preset */
+const did=a=>String(a).replace(/[^A-Za-z0-9ก-๙]/g,'');
+const crList=()=>Object.entries(D.cr||{}).filter(([id,x])=>x&&!x.del&&x.n).sort((p,q)=>(p[1].ts||0)-(q[1].ts||0));
+const DL=()=>{const o=DEBTS.map(x=>x.slice()),s=new Set(o.map(x=>x[0]));crList().forEach(([id,x])=>{if(!s.has(x.n)){s.add(x.n);o.push([x.n,+x.lim||0])}});return o};
+const isCr=a=>!DEBTS.some(x=>x[0]==a);
 
 function S(t,k,v){
   if(t=='sb'||t=='sg'||t=='sx'){const f={sb:'b',sg:'g',sx:'x'}[t];W(['sim',f,k],String(v).trim()===''?DEL:(+v||0));render();return}
@@ -288,12 +332,14 @@ function S(t,k,v){
   if(t=='bud')W(['bud',k],v);
   else if(t=='tot')W(['tot',k],v);
   else if(t=='d')W(['d',sel,k],v);
+  else if(t=='ddf')DDF(k,v);
+  else if(t=='yv')W(['yfix',k,'v'],v);
   else if(t=='sav')W(['sav',M,k],v);
   else W(['m',M,t,k],v);
   render();
 }
 function DB(a,t){
-  const el=document.getElementById('x'+a.replace(' ','')),v=+el.value;
+  const el=document.getElementById('x'+did(a)),v=+el.value;
   if(!v)return;
   const id='e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
   W(['debt',id],{a,t,v,date:ymd(new Date()),ts:Date.now()});
@@ -319,6 +365,121 @@ function dv(n){const d=dt(sel);d.setDate(d.getDate()+n);sel=ymd(d);cur=pDate(pOf
 function go(s){sel=s;cur=pDate(pOf(dt(s)));tab='ov';render();window.scrollTo(0,0)}
 function setTab(t){tab=t;render();window.scrollTo(0,0)}
 
+/* ---------- Preset (ตั้งค่าเบื้องต้น) ---------- */
+function PM(on){const m=document.getElementById('pm');if(on){document.getElementById('pmb').dataset.k='';patchM()}m.classList.toggle('show',!!on)}
+function patchM(){const b=document.getElementById('pmb'),h=pmHTML();if(b.childNodes.length&&b.dataset.k==='1'){const t=document.createElement('div');t.innerHTML=h;morphKids(b,t)}else b.innerHTML=h;b.dataset.k='1'}
+/* รายการ Daily: เก็บค่าเริ่มต้นเดิมลง D.set.wd ครั้งแรกที่แก้ (คีย์ข้อมูลเดิมไม่เปลี่ยน ข้อมูลเก่ายังอยู่) */
+function DIe(){if(D.set.dinit)return;const o={};WDL().forEach((x,i)=>{o[x.id]={k:x.k,g:x.g,n:x.n,def:x.def,ts:i+1}});W(['set','wd'],o);W(['set','dfrom'],AUTO_FROM);W(['set','dinit'],1)}
+function DDF(id,v){DIe();W(['set','wd',id,'def'],v)}
+function DNM(id,v){v=cln(v);if(!v){render();return}DIe();W(['set','wd',id,'n'],v);render()}
+function DDL(id){const x=WDL().find(q=>q.id==id);if(!x||!confirm('ลบรายการ "'+x.n+'"? (ยอดที่เคยบันทึกไว้ยังนับอยู่ในรายงาน)'))return;DIe();W(['set','wd',id,'del'],1);render()}
+function DAI(){
+  const n=cln(V('dnn')),g=V('dng')||DG[2][0];
+  if(!n){alert('ใส่ชื่อรายการก่อน');return}
+  const k=g+'.'+n;if(WDL().some(x=>x.k==k)){alert('มีรายการนี้อยู่แล้ว');return}
+  DIe();W(['set','wd',nid()],{k,g,n,def:VN('dnd'),ts:Date.now()});clr('dnn','dnd');render();
+}
+/* Fix ก้อนใหญ่ประจำปี */
+function AY(){
+  const n=cln(V('yn')),d=V('yd');
+  if(!n||!d){alert('ใส่ชื่อรายการและวันที่ครบกำหนด');return}
+  const x=dt(d),id=nid(),gcw=(document.getElementById('yc')||{}).checked;
+  W(['yfix',id],{n,v:VN('yv'),mo:x.getMonth()+1,day:x.getDate(),rem:+V('yr')||0,ts:Date.now(),from:pOf(new Date())});
+  clr('yn','yv','yd');render();if(gcw)GCAL(id);
+}
+function DY(id){
+  const x=D.yfix[id];if(!x)return;
+  if(!confirm('ลบค่าใช้จ่ายประจำปี "'+x.n+'"? (รอบที่ผ่านมายังอยู่ และไม่ลบนัดใน Google Calendar ที่เพิ่มไว้แล้ว)'))return;
+  W(['yfix',id,'del'],pOf(new Date()));render();
+}
+function nextDue(x){const t=new Date();t.setHours(0,0,0,0);let d=new Date(t.getFullYear(),+x.mo-1,+x.day);if(d<t)d=new Date(t.getFullYear()+1,+x.mo-1,+x.day);return d}
+const cd8=d=>d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate());
+/* Google Calendar: นัดเวลา 09:00 ของวันเตือน (ครบกำหนด − วันเตือนล่วงหน้า) ซ้ำทุกปี */
+function GCAL(id){
+  const x=D.yfix[id];if(!x)return;
+  const due=nextDue(x),r=new Date(due);r.setDate(r.getDate()-(+x.rem||0));
+  const dl=due.toLocaleDateString('th-TH',{day:'numeric',month:'long'});
+  const title=(+x.rem?'⏰ อีก '+x.rem+' วัน จ่าย ':'💰 วันนี้จ่าย ')+x.n+' '+fmt(x.v)+' บาท';
+  const det='ค่าใช้จ่ายก้อนใหญ่ประจำปี (Me Pocket)\nรายการ: '+x.n+'\nจำนวน: '+fmt(x.v)+' บาท\nครบกำหนดทุกปีวันที่ '+dl;
+  const u='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(title)+'&dates='+cd8(r)+'T090000/'+cd8(r)+'T093000&ctz=Asia/Bangkok&details='+encodeURIComponent(det)+'&recur='+encodeURIComponent('RRULE:FREQ=YEARLY');
+  window.open(u,'_blank');
+}
+/* .ics สำหรับ Outlook / iPhone */
+function ICS(id){
+  const x=D.yfix[id];if(!x)return;
+  const due=nextDue(x),nx=new Date(due);nx.setDate(nx.getDate()+1);
+  const s=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MePocket//TH','BEGIN:VEVENT','UID:'+id+'@mepocket','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',
+   'DTSTART;VALUE=DATE:'+cd8(due),'DTEND;VALUE=DATE:'+cd8(nx),'RRULE:FREQ=YEARLY','SUMMARY:💰 จ่าย '+x.n+' '+fmt(x.v)+' บาท','DESCRIPTION:ค่าใช้จ่ายก้อนใหญ่ประจำปี (Me Pocket)',
+   'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+x.n,'TRIGGER:-P'+(+x.rem||0)+'DT15H','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'text/calendar'}));a.download='fix-'+x.n.replace(/[^\wก-๙]+/g,'_')+'.ics';a.click();
+}
+/* เจ้าหนี้ (Debt) */
+function DRC(){const r=document.getElementById('pdr');if(r){const v=VN('pdl')-VN('pdu');r.textContent=fmt2(v);r.style.color=col(v)}}
+function ADC(){
+  const n=cln(V('pdn'));
+  if(!n){alert('ใส่ชื่อธนาคาร / เจ้าหนี้');return}
+  if(DL().some(x=>x[0]==n)){alert('มีชื่อนี้อยู่แล้ว');return}
+  const lim=VN('pdl'),u=VN('pdu');
+  W(['cr',nid()],{n,lim,ts:Date.now()});W(['tot',n],lim);if(u)W(['used0',n],u);
+  clr('pdn','pdl','pdu');DRC();render();
+}
+function DX(a){
+  const e=crList().find(([id,x])=>x.n==a);if(!e)return;
+  if(!confirm('ลบหนี้ "'+a+'" และรายการจ่าย/กู้ทั้งหมดของบัญชีนี้?'))return;
+  W(['cr',e[0],'del'],1);W(['tot',a],DEL);W(['used0',a],DEL);
+  Object.entries(D.debt).forEach(([id,x])=>{if(x.a==a)W(['debt',id],DEL)});
+  render();
+}
+function pmHTML(){
+  const BUD0={wd:444,sat:2000,sun:2000},bv=k=>D.bud[k]??BUD0[k];
+  const wl=WDL(),RM=[0,1,3,7,14,30];
+  const yl=Object.entries(D.yfix||{}).filter(([id,x])=>x&&x.n&&!x.del).sort((p,q)=>(p[1].mo-q[1].mo)||(p[1].day-q[1].day));
+  let h=`<div class="r"><b style="font-size:18px">⚙️ Preset · ตั้งค่าเบื้องต้น</b><button class="btn" onclick="PM(0)">ปิด</button></div>
+  <div class="mut">ตั้งครั้งแรกแล้วแอปจะใช้ค่านี้ทุกวัน แก้ไขได้ทุกเมื่อ</div>
+  <div class="stp"><em>1</em>งบ Daily ต่อวัน</div>
+  <div class="r"><span class="ri">🏢</span><span>จันทร์ – ศุกร์</span>${inp('bud','wd',bv('wd'))}</div>
+  <div class="r"><span class="ri">🌤️</span><span>วันเสาร์</span>${inp('bud','sat',bv('sat'))}</div>
+  <div class="r"><span class="ri">☀️</span><span>วันอาทิตย์</span>${inp('bud','sun',bv('sun'))}</div>
+  <div class="mut" style="margin-top:8px">งบนี้ใช้กับ Daily ทุกวัน แก้ได้ทุกเมื่อที่นี่ หรือในหน้า Over View (แก้แล้วมีผลกับทุกวัน รวมวันที่ผ่านมา)</div>
+  <div class="mut" style="margin-top:12px"><b>รายการ Daily วันจันทร์–ศุกร์</b> · ช่องตัวเลข = <b>ค่าประจำ จ–ศ</b> ใส่ให้อัตโนมัติทุกวันทำงาน (เช่น ค่ารถ) แก้ของวันนั้นได้ ถ้าไม่ได้ใช้ให้ใส่ 0 · เว้น 0 = ไม่ใส่ให้ (รายการวันเสาร์–อาทิตย์ไม่เปลี่ยน)</div>`;
+  DG.forEach(([g,gi])=>{
+    h+=`<div class="mut" style="margin:10px 0 2px">${gi} ${g}</div>`;
+    wl.filter(x=>x.g==g).forEach(x=>{h+=`<div class="r fxr">${rI(x.n)}<input class="t" style="flex:1;min-width:0" value="${esc(x.n)}" onchange="DNM('${x.id}',this.value)">${inp('ddf',x.id,x.def)}<button class="x" onclick="DDL('${x.id}')">🗑</button></div>`});
+  });
+  h+=`<div class="in"><div class="frm"><div class="w2"><label>＋ เพิ่มรายการ Daily (วันจันทร์–ศุกร์)</label><input class="t" id="dnn" placeholder="เช่น Taxi เช้า"></div>
+   <div><label>หมวด</label><select class="t" id="dng">${DG.map(([g,gi])=>`<option value="${g}">${gi} ${g}</option>`).join('')}</select></div>
+   <div><label>ค่าประจำ จ–ศ (ถ้ามี)</label><input class="t" id="dnd" type="number" inputmode="decimal" placeholder="0"></div>
+   <button class="btn p w2" onclick="DAI()">＋ เพิ่มรายการ</button></div></div>
+
+  <div class="stp"><em>2</em>Fix ก้อนใหญ่ประจำปี</div>
+  <div class="mut">ค่าใช้จ่ายก้อนใหญ่ที่จ่ายปีละครั้ง เช่น ประกัน ภาษีรถ จะขึ้นในช่อง Fixed ของรอบที่ครบกำหนด และในหน้า Monthly (แก้จำนวนเงินได้ที่ช่องด้านล่าง)</div>
+  <div class="r"><span class="mut">รวมทั้งปี ${yl.length} รายการ</span><b>${fmt(yl.reduce((t,[i,x])=>t+(+x.v||0),0))} ฿</b></div>
+  ${yl.map(([id,x])=>`<div class="in" style="padding:10px 12px"><div class="r"><span><b>${esc(x.n)}</b><br><span class="mut">ครบกำหนด ${x.day} ${new Date(2000,x.mo-1,1).toLocaleDateString('th-TH',{month:'long'})} · เตือนก่อน ${+x.rem||0} วัน</span></span>${inp('yv',id,x.v)}<button class="x" onclick="DY('${id}')">🗑</button></div>
+    <div class="r"><button class="btn s" style="flex:1" onclick="GCAL('${id}')">📅 เพิ่มลง Google Calendar</button><button class="btn s" onclick="ICS('${id}')">⬇️ .ics</button></div></div>`).join('')}
+  <div class="frm"><div class="w2"><label>ค่าอะไร</label><input class="t" id="yn" placeholder="เช่น ประกันรถ"></div>
+   <div><label>จำนวนเงิน</label><input class="t" id="yv" type="number" inputmode="decimal" placeholder="0"></div>
+   <div><label>วันครบกำหนด</label><input class="t" id="yd" type="date"></div>
+   <div class="w2"><label>เตือนล่วงหน้า</label><select class="t" id="yr">${RM.map(d=>`<option value="${d}" ${d==7?'selected':''}>${d?d+' วัน':'วันที่ครบกำหนด'}</option>`).join('')}</select></div>
+   <label class="w2" style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="yc" checked style="width:auto"> เปิด Google Calendar ตั้งเตือนทันทีหลังเพิ่ม</label>
+   <button class="btn p w2" onclick="AY()">＋ เพิ่ม Fix ก้อนใหญ่</button></div>
+  <div class="mut" style="margin-top:6px">📅 Google Calendar = เปิดหน้าสร้างนัด (ซ้ำทุกปี เวลา 9:00 ของวันเตือน) แล้วกด "บันทึก" · ⬇️ .ics = สำหรับ Outlook / ปฏิทิน iPhone</div>
+
+  <div class="stp"><em>3</em>Debt (หนี้ / เจ้าหนี้)</div>`;
+  DL().forEach(([a,def])=>{
+    const L=Object.values(D.debt||{}).filter(x=>x.a==a),pd=L.filter(x=>x.t=='pay').reduce((t,x)=>t+(+x.v||0),0),ad=L.filter(x=>x.t=='add').reduce((t,x)=>t+(+x.v||0),0);
+    const lim=D.tot[a]??def,used=(D.used0[a]||0)+ad-pd;
+    h+=`<div class="r"><span class="ri">🏦</span><span>${esc(a)}<br><span class="mut">วงเงิน ${fmt(lim)} · ใช้ ${fmt(used)} · เหลือ ${fmt(lim-used)}</span><br><a class="ed" onclick="ED('${a}','tot')">แก้วงเงิน</a> &nbsp; <a class="ed" onclick="ED('${a}','used0')">แก้ยอดที่ใช้ไป</a></span>${isCr(a)?`<button class="x" onclick="DX('${a}')">🗑</button>`:''}</div>`;
+  });
+  h+=`<div class="in"><b>＋ เพิ่มเจ้าหนี้</b><div class="frm"><div class="w2"><label>ชื่อธนาคาร / บัญชีหนี้</label><input class="t" id="pdn" placeholder="เช่น บัตร KTC, สินเชื่อ SCB"></div>
+   <div><label>วงเงินทั้งหมด</label><input class="t" id="pdl" type="number" inputmode="decimal" placeholder="0" oninput="DRC()"></div>
+   <div><label>ที่ใช้ไป</label><input class="t" id="pdu" type="number" inputmode="decimal" placeholder="0" oninput="DRC()"></div>
+   <div class="w2 r"><span class="mut">เหลือใช้ได้ (คำนวณให้)</span><b id="pdr">0.00</b></div>
+   <button class="btn p w2" onclick="ADC()">＋ เพิ่มหนี้</button></div></div>
+  <div class="mut">เพิ่มได้หลายเจ้าหนี้ · แต่ละรายจะไปอยู่ในส่วน Debt ของหน้า Over View พร้อมกราฟวงกลมและช่อง จ่ายเพิ่ม / กู้เพิ่ม</div>
+  <button class="btn y" style="width:100%;margin-top:16px;padding:13px" onclick="PM(0)">✓ เสร็จ</button>`;
+  return h;
+}
+
 /* ---------- ชิ้นส่วน UI ---------- */
 /* พิมพ์แล้วบันทึก+คิดใหม่ทันที (หน่วง 0.6 วินาทีหลังหยุดพิมพ์) ไม่ต้องรอกดออกจากช่อง */
 let LT=null,LP=null;
@@ -343,7 +504,7 @@ const col=v=>v<0?'#c0584a':'#2c7a64';
 function ov(){
   const M=ym(cur),m=mo(M),inc=sum(m.inc),ex=expTot(M),left=inc-ex;
   let unpaid=0;const upl=[];
-  const gs=G.map(([g,items],i)=>{let a=0,b=0,u=0;items.forEach(([n,d])=>{const ac=+m.exp[g+'.'+n]||0,bu=bdg(g,n,d);a+=ac;b+=bu;if(!(ac>0)){unpaid+=bu;u+=bu;if(bu>0)upl.push([g,n,bu])}});return{g,a,b,u,c:GC[i]}});
+  const gs=G.map(([g,items],i)=>{let a=0,b=0,u=0;items.forEach(([n,d])=>{const ac=+m.exp[g+'.'+n]||0,bu=bdg(g,n,d);a+=ac;b+=bu;if(!(ac>0)){unpaid+=bu;u+=bu;if(bu>0)upl.push([g,n,bu])}});if(g=='Fixed')yfRows(M).forEach(y=>{const ac=+m.exp[y.k]||0;a+=ac;b+=y.b;if(!(ac>0)){unpaid+=y.b;u+=y.b;if(y.b>0)upl.push([g,'📆 '+y.n,y.b])}});return{g,a,b,u,c:GC[i]}});
   let dB=0;pDays(M).forEach(s=>{dB+=dBud(s)});
   const dA=daySum(M),dU=Math.max(0,dB-dA);gs.push({g:'Daily',a:dA,b:dB,u:dU,c:GC[3]});if(dU>0){unpaid+=dU;upl.push(['Daily','งบรายวันที่ยังไม่ได้ใช้',dU])}
   const bT=gs.reduce((s,x)=>s+x.b,0),bL=bT-ex,free=inc-unpaid;
@@ -376,13 +537,16 @@ function ov(){
   let body=`<div class="r"><button class="btn" onclick="dv(-1)">‹</button><input type="date" value="${sel}" onchange="if(this.value){sel=this.value;cur=pDate(pOf(dt(sel)))}render()" style="flex:1"><button class="btn" onclick="dv(1)">›</button></div>
   <div class="r"><span>🎯 งบวันนี้ (แก้ได้)</span>${inp('bud',dKey(sel),bu,'b')}</div>
   <div class="r"><span>ใช้ไปแล้ว</span><b style="color:${col(df)}">${fmt(sp)} (${df<0?'เกิน ':'เหลือ '}${fmt(Math.abs(df))})</b></div>`;
-  if(isAuto(sel))body+=`<div class="mut">ค่าเดินทางประจำ (จ–ศ) ใส่ให้อัตโนมัติ แก้ตัวเลขของวันนี้ได้ ถ้าไม่ได้ใช้ให้ใส่ 0</div>`;
-  tpl.forEach(([g,its])=>{body+=`<div class="sub"><span>${ic(g)} ${g}</span></div>`+its.map(n=>`<div class="r">${rI(n)}<span>${n}</span>${inp('d',g+'.'+n,dd[g+'.'+n])}</div>`).join('')});
+  if(isAuto(sel)&&Object.keys(autoMap()).length)body+=`<div class="mut">ค่าประจำ (จ–ศ) ใส่ให้อัตโนมัติ แก้ตัวเลขของวันนี้ได้ ถ้าไม่ได้ใช้ให้ใส่ 0</div>`;
+  const wkE=(w==0||w==6),tk=new Set(),wl=WDL();
+  (wkE?WE.map(([g,its])=>[g,its.map(n=>({k:g+'.'+n,n}))]):DG.map(([g])=>[g,wl.filter(x=>x.g==g).map(x=>({k:x.k,n:x.n}))])).forEach(([g,its])=>{its.forEach(x=>tk.add(x.k));if(its.length)body+=`<div class="sub"><span>${ic(g)} ${g}</span></div>`+its.map(x=>`<div class="r">${rI(x.n)}<span>${esc(x.n)}</span>${inp('d',x.k,dd[x.k])}</div>`).join('')});
+  const xk=Object.keys(dd).filter(k=>!tk.has(k)&&+dd[k]);
+  if(xk.length)body+=`<div class="sub"><span>• อื่นๆ ที่เคยบันทึก</span></div>`+xk.map(k=>`<div class="r">${rI(k)}<span>${esc(k.replace('.',' · '))}</span>${inp('d',k,dd[k])}</div>`).join('');
   let o=sec2('daily','Daily · '+dn,`${fmt(sp)} / ${fmt(bu)}`,body,'📅','#5f9c8e','#d8ece6');
   const tints=['#fadfd7','#fdf1c4','#dde8f6'];
   G.forEach(([g,items],i)=>{
     const x=gs[i];
-    const rows=items.map(([n,d])=>{const k=g+'.'+n;return `<div class="r">${rI(n)}<span>${n}</span>${inp('bud',k,bdg(g,n,d),'b')}${inp('exp',k,m.exp[k])}</div>`}).join('');
+    const rows=items.map(([n,d])=>{const k=g+'.'+n;return `<div class="r">${rI(n)}<span>${n}</span>${inp('bud',k,bdg(g,n,d),'b')}${inp('exp',k,m.exp[k])}</div>`}).join('')+(g=='Fixed'?yfRows(M).map(y=>`<div class="r">${rI('📆')}<span>${esc(y.n)}<br><span class="tg yy">ก้อนใหญ่ ${y.date.getDate()} ${sh(y.date)}</span></span>${inp('yv',y.id,y.b,'b')}${inp('exp',y.k,m.exp[y.k])}</div>`).join(''):'');
     const hint=g=='Pay'?`<div class="mut" style="margin-bottom:6px">ค่างวดที่จ่ายหนี้ประจำรอบ กรอกที่นี่เพื่อหักจากเงินคงเหลือ ส่วน Debt ด้านล่างเป็นการติดตามยอดหนี้แยกต่างหาก</div>`:'';
     o+=sec2('g'+g,'จ่าย: '+g,`${fmt(x.a)} / ${fmt(x.b)}`,hint+`<div class="sub"><span></span><span>งบ (แก้ได้) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ใช้จริง</span></div>`+rows,GI[g],GC[i],tints[i]);
   });
@@ -390,18 +554,18 @@ function ov(){
 
   /* กลุ่ม 4: Debt (แถบดำ) */
   let dh='',allUsed=0;const td=ymd(new Date());
-  DEBTS.forEach(([a,def])=>{
+  DL().forEach(([a,def])=>{
     const L=Object.entries(D.debt).map(([id,e])=>Object.assign({id},e)).filter(x=>x.a==a).sort((p,q)=>(q.ts||0)-(p.ts||0));
     const paid=L.filter(x=>x.t=='pay').reduce((s,x)=>s+(+x.v||0),0),add=L.filter(x=>x.t=='add').reduce((s,x)=>s+(+x.v||0),0);
     const tP=L.filter(x=>x.t=='pay'&&x.date==td).reduce((s,x)=>s+(+x.v||0),0),tA=L.filter(x=>x.t=='add'&&x.date==td).reduce((s,x)=>s+(+x.v||0),0);
-    const lim=D.tot[a]??def,used=(D.used0[a]||0)+add-paid,rem=lim-used,pc=lim>0?Math.round(used/lim*100):0,id=a.replace(' ','');allUsed+=used;
+    const lim=D.tot[a]??def,used=(D.used0[a]||0)+add-paid,rem=lim-used,pc=lim>0?Math.round(used/lim*100):0,id=did(a);allUsed+=used;
     const list=L.length?L.map(e=>`<div class="le"><span class="tg ${e.t=='pay'?'pg':'pr'}">${e.t=='pay'?'จ่ายเพิ่ม':'กู้เพิ่ม'}</span><span class="mut">${e.date?dt(e.date).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}${e.ts>1e12?' '+new Date(e.ts).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}):''}</span><b style="color:${e.t=='pay'?'#2c7a64':'#c0584a'}">${e.t=='pay'?'−':'+'}${fmt2(e.v)}</b><button class="x" onclick="DD('${e.id}')">🗑</button></div>`).join(''):'<div class="mut" style="padding:6px 0">ยังไม่มีรายการ</div>';
-    dh+=`<div class="in"><div class="r"><div style="flex:1"><b style="font-size:22px">${a.toUpperCase()}</b><div class="mut">${a=='BBL'?'ธนาคารกรุงเทพ':'ไลน์ แบงก์'}</div></div><span class="pill">ใช้แล้ว ${pc}%</span></div><div class="dv"></div>
+    dh+=`<div class="in"><div class="r"><div style="flex:1"><b style="font-size:22px">${a.toUpperCase()}</b><div class="mut">${({BBL:'ธนาคารกรุงเทพ','Line BK':'ไลน์ แบงก์'})[a]||''}</div></div><span class="pill">ใช้แล้ว ${pc}%</span></div><div class="dv"></div>
     <div style="display:flex;align-items:center;gap:10px">${ring(used,lim)}<div style="flex:1;min-width:0;font-size:13px">
     <div class="r"><span class="nw">วงเงินเต็ม</span><span class="dbn">${fmt2(lim)}</span></div>
     <div class="r"><span class="nw"><i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:#e0897a"></i> ใช้ไปแล้ว</span><span class="dbn" style="color:#c0584a">${fmt2(used)}</span></div>
     <div class="r"><span class="nw"><i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:#5f9c8e"></i> เหลือใช้ได้</span><span class="dbn" style="color:#2c7a64;font-size:16px">${fmt2(rem)}</span></div></div></div>
-    <div class="r" style="justify-content:flex-end;gap:16px"><a class="ed" onclick="ED('${a}','tot')">แก้วงเงินเต็ม</a><a class="ed" onclick="ED('${a}','used0')">ตั้งยอดใช้ไปแล้วตั้งต้น</a></div><div class="dv"></div>
+    <div class="r" style="justify-content:flex-end;gap:16px"><a class="ed" onclick="ED('${a}','tot')">แก้วงเงินเต็ม</a><a class="ed" onclick="ED('${a}','used0')">ตั้งยอดใช้ไปแล้วตั้งต้น</a>${isCr(a)?`<a class="ed" style="color:#b0503f" onclick="DX('${a}')">ลบหนี้นี้</a>`:''}</div><div class="dv"></div>
     <div class="r"><input class="n" id="x${id}" type="number" inputmode="decimal" placeholder="ระบุจำนวนเงิน" style="flex:1;min-width:0;width:auto;border-radius:14px;padding:12px"><button class="btn p" style="flex:none;white-space:nowrap;border-radius:14px;padding:12px 16px" onclick="DB('${a}','pay')">จ่ายเพิ่ม</button></div>
     <button class="btn c" style="width:100%;border-radius:14px;padding:12px" onclick="DB('${a}','add')">กู้เพิ่ม</button>
     <div class="dv"></div>
@@ -415,15 +579,19 @@ function ov(){
 /* ---------- แท็บ Monthly ---------- */
 let tx=0;
 function monthly(){
-  const y=cur.getFullYear(),mI=cur.getMonth(),M=ym(cur),days=pDays(M),first=dt(days[0]).getDay();
+  const y=cur.getFullYear(),mI=cur.getMonth(),M=ym(cur),days=pDays(M),first=dt(days[0]).getDay(),fx=yfRows(M),fxd=new Set(fx.map(q=>ymd(q.date)));
   let cells='';for(let i=0;i<first;i++)cells+='<div></div>';
   days.forEach((s,i)=>{
     const d=+s.slice(8),e=dayE(s);let c='',t='';
     if(e&&sum(e)>0){const df=dBud(s)-sum(e);c=df>=0?'g':'r';t=(df>=0?'+':'−')+fmt(Math.abs(df))}
     const tg=(i==0||d==1)?'<i class="mt"> '+sh(dt(s))+'</i>':'';
-    cells+=`<div class="cd ${c}" onclick="go('${s}')"><small>${d}${tg}</small><b>${t}</b></div>`;
+    cells+=`<div class="cd ${c} ${fxd.has(s)?'fx':''}" onclick="go('${s}')"><small>${d}${tg}${fxd.has(s)?'📆':''}</small><b>${t}</b></div>`;
   });
-  let h=nav()+`<div class="card" style="background:linear-gradient(145deg,#fdfdfe,#dde8f6)" ontouchstart="tx=event.touches[0].clientX" ontouchend="const d=event.changedTouches[0].clientX-tx;if(Math.abs(d)>60)mv(d<0?1:-1)"><div class="cal" style="margin-bottom:6px">${['อา','จ','อ','พ','พฤ','ศ','ส'].map(x=>`<span class="wk">${x}</span>`).join('')}</div><div class="cal">${cells}</div><div class="mut" style="margin-top:10px;text-align:center">เขียว = ประหยัดได้ · แดง = ใช้เกินงบ · เลื่อนซ้าย-ขวาเปลี่ยนรอบ</div></div>`;
+  let h=nav()+`<div class="card" style="background:linear-gradient(145deg,#fdfdfe,#dde8f6)" ontouchstart="tx=event.touches[0].clientX" ontouchend="const d=event.changedTouches[0].clientX-tx;if(Math.abs(d)>60)mv(d<0?1:-1)"><div class="cal" style="margin-bottom:6px">${['อา','จ','อ','พ','พฤ','ศ','ส'].map(x=>`<span class="wk">${x}</span>`).join('')}</div><div class="cal">${cells}</div><div class="mut" style="margin-top:10px;text-align:center">เขียว = ประหยัดได้ · แดง = ใช้เกินงบ · 📆 = Fix ก้อนใหญ่ · เลื่อนซ้าย-ขวาเปลี่ยนรอบ</div></div>`;
+  const xe=mo(M).exp;
+  h+=card(`<div class="r"><b>📆 Fix ก้อนใหญ่รอบนี้</b><b>${fmt(fx.reduce((t,q)=>t+q.b,0))}</b></div>`+(fx.length?fx.map(q=>{const a=+xe[q.k]||0;return `<div class="r">${rI('📆')}<span>${esc(q.n)}<br><span class="mut">ครบกำหนด ${q.date.getDate()} ${sh(q.date)}</span></span><span class="tg ${a>0?'pg':'pr'}">${a>0?'จ่ายแล้ว '+fmt(a):'ยังไม่จ่าย'}</span><b>${fmt(q.b)}</b></div>`}).join(''):'<div class="mut">ไม่มีค่าใช้จ่ายก้อนใหญ่ในรอบนี้</div>'));
+  const yl=Object.entries(D.yfix||{}).filter(([i,q])=>q&&q.n&&!q.del).sort((p,q)=>(p[1].mo-q[1].mo)||(p[1].day-q[1].day));
+  if(yl.length)h+=card(`<div class="r"><b>🗓️ Fix ก้อนใหญ่ทั้งปี</b><b>${fmt(yl.reduce((t,[i,q])=>t+(+q.v||0),0))}</b></div>`+yl.map(([i,q])=>`<div class="r mut"><span>${q.day} ${new Date(2000,q.mo-1,1).toLocaleDateString('th-TH',{month:'short'})} · ${esc(q.n)}</span><span>${fmt(q.v)}</span></div>`).join(''));
   const ms=[];for(let i=5;i>=0;i--)ms.push(new Date(y,mI-i,1));
   const vals=ms.map(d=>[sum(mo(ym(d)).inc),expTot(ym(d))]),mx=Math.max(1,...vals.flat());
   let sv='';
@@ -506,7 +674,8 @@ function morph(p,a,b){
   if(a.nodeType!==b.nodeType||a.nodeName!==b.nodeName){p.replaceChild(b.cloneNode(true),a);return}
   if(a.nodeType===3){if(a.data!==b.data)a.data=b.data;return}
   if(a.nodeType!==1)return;
-  const isIn=a.nodeName==='INPUT'||a.nodeName==='TEXTAREA';
+  const isIn=a.nodeName==='INPUT'||a.nodeName==='TEXTAREA'||a.nodeName==='SELECT';
+  if(isIn&&a.id)return;
   for(const at of Array.from(b.attributes)){if(isIn&&at.name==='value')continue;if(a.getAttribute(at.name)!==at.value)a.setAttribute(at.name,at.value)}
   for(const at of Array.from(a.attributes)){if(isIn&&at.name==='value')continue;if(!b.hasAttribute(at.name))a.removeAttribute(at.name)}
   if(isIn){if(document.activeElement!==a&&a.value!==b.value)a.value=b.value;return}
@@ -519,6 +688,7 @@ function render(){
   app.dataset.tab=tab;
   document.getElementById('tabs').innerHTML=[['ov','Over View'],['mo','Monthly'],['sv','Saving'],['sim','Simulate']].map(([k,l])=>`<button class="${tab==k?'on':''}" onclick="setTab('${k}')">${l}</button>`).join('');
   status();
+  const pm=document.getElementById('pm');if(pm&&pm.classList.contains('show'))patchM();
 }
 boot();
 render();
