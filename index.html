@@ -77,6 +77,15 @@ input.t,select.t{font-size:15px;border-radius:999px;border:1px solid #fff;backgr
 .stp{display:flex;align-items:center;gap:8px;margin:14px 0 4px;font-weight:700}.stp em{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#f7dc7a,#e8b93f);font-size:13px}
 .frm{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.frm input,.frm select{width:100%}.frm .w2{grid-column:span 2}.frm label{font-size:12px;color:var(--mut)}
 .fxr{gap:6px}.fxr input.n{width:78px;padding:8px 8px;font-size:14px}
+.svc{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.svm{border-radius:14px;padding:6px 2px;text-align:center;font-size:11px;line-height:1.3;border:2px solid transparent;cursor:pointer;font-variant-numeric:tabular-nums}.svm b{display:block;font-size:13px}
+.svm.ok,.svd.ok{background:#d3ebe2;color:#2c7a64}.svm.tt,.svd.tt{background:#fdf1c4;color:#8a6a10}.svm.neg,.svd.neg{background:#f8d8d1;color:#b0503f}
+.svm.on{border-color:#3a3d44}.svm.now{box-shadow:0 0 0 2px #e8b93f}.svm.past{opacity:.55}
+.svd{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:middle}
+.svs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.svs>div{background:rgba(255,255,255,.7);border-radius:18px;padding:10px;text-align:center}.svs b{display:block;font-size:19px;margin:2px 0}.svs span{font-size:12px;color:var(--mut)}
+input.n.sve{background:#fff4c9}
+.ad{display:flex;gap:8px;padding:9px 12px;border-radius:14px;margin:6px 0;font-size:14px;line-height:1.45;background:rgba(255,255,255,.7)}
+.ad.w{background:#f8d8d1}.ad.i{background:#e0ecf8}.ad.ok{background:#d3ebe2}.ad.y{background:#fdf1c4}
 </style>
 </head>
 <body>
@@ -145,9 +154,9 @@ function delIn(o,path){let c=o;for(let i=0;i<path.length-1;i++){c=c[path[i]];if(
 function applyPatch(base,patch){for(const k of Object.keys(patch)){const v=patch[k];if(v===DEL)delete base[k];else if(isObj(v)){if(!isObj(base[k]))base[k]={};applyPatch(base[k],v)}else base[k]=v}return base}
 function overlay(base,patch){for(const k of Object.keys(patch)){const v=patch[k];if(isObj(v)){if(!isObj(base[k]))base[k]={};overlay(base[k],v)}else base[k]=v}return base}
 function missing(remote,local){const out={};for(const k of Object.keys(local||{})){const l=local[k],r=remote?remote[k]:undefined;if(isObj(l)){const m=missing(isObj(r)?r:{},l);if(hasKeys(m))out[k]=m}else if(r===undefined)out[k]=l}return out}
-function norm(x){const o=Object.assign({bud:{},tot:{},used0:{},m:{},d:{},sav:{},debt:{},sim:{},set:{},yfix:{},cr:{}},x||{});
+function norm(x){const o=Object.assign({bud:{},tot:{},used0:{},m:{},d:{},sav:{},debt:{},sim:{},set:{},yfix:{},cr:{},sv:{}},x||{});
  if(Array.isArray(o.debt)){const n={};o.debt.forEach((e,i)=>{n['o'+i]=Object.assign({ts:i},e)});o.debt=n}
- for(const k of ['bud','tot','used0','m','d','sav','debt','sim','set','yfix','cr'])if(!isObj(o[k]))o[k]={};return o}
+ for(const k of ['bud','tot','used0','m','d','sav','debt','sim','set','yfix','cr','sv'])if(!isObj(o[k]))o[k]={};return o}
 function toFS(p,del){const o={};for(const k of Object.keys(p)){const v=p[k];o[k]=v===DEL?del():isObj(v)?toFS(v,del):v}return o}
 function parseCfg(t){const c={},ok=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId','measurementId'],re=/["']?(\w+)["']?\s*:\s*["']([^"']*)["']/g;let m;while((m=re.exec(t||''))){if(ok.includes(m[1]))c[m[1]]=m[2]}return c}
 /*PURE-END*/
@@ -621,7 +630,7 @@ function ov(){
     ${C['l'+id]?'':`<div class="lst">${list}</div>`}</div>`;
   });
   const dSumBox=`<div class="in" style="margin-top:10px"><b>📥 สรุปยอดกู้เพิ่มรอบนี้</b><div class="mut">${dcLab()}</div>`+dSm.map(([a,v])=>`<div class="r"><span>🏦 ${esc(a)}</span><b style="color:${v>0?'#c0584a':'#8a8f98'}">${v>0?'+':''}${fmt2(v)}</b></div>`).join('')+`<div class="dv"></div><div class="r"><b>รวมทุกธนาคาร</b><b style="color:${allAdd>0?'#c0584a':'#8a8f98'}">${allAdd>0?'+':''}${fmt2(allAdd)}</b></div></div>`;
-  h+=band('bk',sec2('debt','Debt (แยกจากส่วนอื่น)','ใช้แล้วรวม '+fmt(allUsed),dh,'🏦','#e0897a','#fadfd7',dSumBox));
+  h+=band('bk',sec2('debt','Debt (แยกจากส่วนอื่น)','ใช้แล้วรวม '+fmt(allUsed),dh,'🏦','#e0897a','#fadfd7',dSumBox)+`<div class="card"><button class="btn p" style="width:100%;border-radius:14px;padding:14px" onclick="setTab('sur')">🛟 Surviver · แผนปลดหนี้และเอาตัวรอดรายเดือน</button></div>`);
   return h;
 }
 
@@ -730,8 +739,139 @@ function morph(p,a,b){
   if(isIn){if(document.activeElement!==a&&a.value!==b.value)a.value=b.value;return}
   morphKids(a,b);
 }
+/* ---------- Surviver: ปฏิทินเอาตัวรอด + แผนปลดหนี้ (ตั้งต้นจากชีท Simulation D1 ของไฟล์ debt_repayment_plan) ----------
+   ข้อมูลเก็บที่ D.sv (ซิงก์เหมือนส่วนอื่น): sv.o[เดือน][ช่อง] = ค่าที่แก้ · sv.ob/ok = ยอดหนี้ตั้งต้น BBL/BK · sv.thr = เกณฑ์ "ตึง"
+   ไม่คิดดอกเบี้ย (ชีทต้นฉบับไม่ได้คิด) และเป็นสำเนาแยกจากหน้า Debt จริง */
+const SVF=[['inc','รายรับ (Main)'],['fx','Fixed'],['dl','Daily (ใช้รายวัน)'],['ss','Sasu'],['ew','ไฟ + น้ำ'],['md','Mid'],['nf','Netflix'],['pb','จ่ายหนี้ BBL'],['pk','จ่ายหนี้ LINE BK'],['ins','ประกันชีวิต'],['hbd','HBD / แต๊ะเอีย'],['oth','อื่นๆ (ประกันรถ, พรบ. ฯลฯ)'],['bb','BBL ยืมเพิ่ม'],['bk','LINE BK ยืมเพิ่ม']];
+const SV_OPEN=[98058,273537];
+const SV_BASE=[["2026-10",1545,0,0,0,0,0,0,0,0,0,0,0,0,0],["2026-11",28734,2020,12320,16000,4000,0,0,0,0,0,0,0,253,11671.42],["2026-12",77642,21511,12320,16000,2876,0,0,8000,12000,0,0,0,0,0],["2027-01",77642,21511,11200,20000,2876,2850,617,8000,8000,22895.48,0,0,0,0],["2027-02",77642,21511,12880,16000,2876,0,0,8000,12000,0,4000,0,0,19443],["2027-03",77642,21511,11200,16000,2876,0,617,8000,12000,0,2000,0,0,0],["2027-04",77642,21511,12320,16000,2876,0,0,8000,12000,0,0,0,0,0],["2027-05",77642,21511,11760,20000,2876,2850,617,8000,10000,0,0,0,0,0],["2027-06",77642,21511,12880,16000,2876,0,0,8000,10000,0,6000,21000,0,0],["2027-07",77642,21511,11760,16000,2876,0,617,8000,8000,22895.48,0,0,0,20995],["2027-08",77642,21511,12320,16000,2876,2850,0,8000,11000,0,0,5000,0,5524],["2027-09",77642,21511,12880,16000,2876,0,617,5287,14000,0,0,0,0,0],["2027-10",77642,21511,11200,20000,2876,0,0,8000,14000,0,0,0,0,0],["2027-11",77642,21511,12880,16000,2876,2850,617,4771,14000,0,0,0,0,0],["2027-12",77642,21511,11200,20000,2876,0,0,0,14000,0,0,0,0,0],["2028-01",77642,21511,11760,20000,2876,2850,617,0,10000,22895.48,0,0,0,0],["2028-02",77642,21511,12880,16000,2876,0,0,0,15000,0,4000,0,0,14003],["2028-03",77642,21511,11760,16000,2876,0,617,0,15000,0,2000,0,0,0],["2028-04",77642,21511,11760,20000,2876,0,0,0,15000,0,0,0,0,0],["2028-05",77642,21511,12320,16000,2876,2850,617,0,14000,0,0,0,0,0],["2028-06",77642,21511,12320,16000,2876,0,0,0,10000,0,6000,21000,0,0],["2028-07",77642,21511,11760,20000,2876,0,617,0,10000,22895.48,0,0,0,12435],["2028-08",77642,21511,11760,20000,2876,2850,0,0,11000,0,0,5000,0,11153],["2028-09",77642,21511,11760,20000,2876,0,617,0,14000,0,0,0,0,0],["2028-10",77642,21511,11760,20000,2876,0,0,0,14000,0,0,0,0,0],["2028-11",77642,21511,11760,20000,2876,0,617,0,14000,0,0,0,0,0],["2028-12",77642,21511,11760,20000,2876,0,0,0,14000,0,0,0,0,0],["2029-01",77642,21511,11760,20000,2876,0,0,0,14000,22895.48,0,0,0,0],["2029-02",77642,21511,11760,20000,2876,0,617,0,14000,0,4000,0,0,0],["2029-03",77642,21511,11760,20000,2876,0,0,0,12090,0,2000,0,0,0],["2029-04",77642,21511,11760,20000,2876,0,617,0,0,0,0,0,0,0],["2029-05",77642,21511,11760,20000,2876,0,0,0,0,0,0,0,0,0]];
+let SVi=-1,SVfwd=false;
+const svLab=(k,full)=>{const[y,m]=k.split('-');return new Date(+y,+m-1,1).toLocaleDateString('th-TH',{month:'short'})+(full?' '+(+y+543):'')};
+const svK=v=>(v<0?'−':'+')+(Math.abs(v)/1000).toFixed(1)+'k';
+const svCls=(r2,thr)=>r2<0?'neg':r2<thr?'tt':'ok';
+function svModel(){
+  const o=(D.sv&&D.sv.o)||{},ob=D.sv&&D.sv.ob!==undefined?+D.sv.ob:SV_OPEN[0],ok=D.sv&&D.sv.ok!==undefined?+D.sv.ok:SV_OPEN[1];
+  let a=ob,b=ok,res=0;
+  return SV_BASE.map((r,i)=>{
+    const k=r[0],f={},ov={};
+    SVF.forEach(([n],j)=>{const x=o[k]&&o[k][n];if(x!==undefined&&x!==null){f[n]=+x||0;ov[n]=1}else f[n]=r[j+1]});
+    const aB=a+f.bb,bB=b+f.bk,pb=Math.max(0,Math.min(f.pb,aB)),pk=Math.max(0,Math.min(f.pk,bB));
+    const exp=f.fx+f.dl+f.ss+f.ew+f.md+f.nf,big=f.ins+f.hbd+f.oth,r1=f.inc-exp,r2=r1-pb-pk-big;
+    res+=r2;a=aB-pb;b=bB-pk;
+    return{i,k,f,ov,aB,bB,pb,pk,exp,big,r1,r2,res,a,b,d:a+b};
+  });
+}
+function SVs(i,sc){SVi=i;render();if(sc)setTimeout(()=>{const e=document.getElementById('svd');if(e)e.scrollIntoView({behavior:'smooth',block:'start'})},40)}
+function SVE(k,n,v){
+  const i=SV_BASE.findIndex(r=>r[0]==k);if(i<0)return;
+  (SVfwd?SV_BASE.slice(i).map(r=>r[0]):[k]).forEach(x=>W(['sv','o',x,n],String(v).trim()===''?DEL:(+v||0)));
+  render();
+}
+function SVR(k){W(['sv','o',k],DEL);render()}
+function SVRA(){if(!confirm('รีเซ็ตทุกช่องที่แก้ไว้ กลับเป็นค่าจากชีท?'))return;W(['sv','o'],DEL);W(['sv','ob'],DEL);W(['sv','ok'],DEL);render()}
+function SVO(w,v){W(['sv',w],String(v).trim()===''?DEL:(+v||0));render()}
+function SVT(v){W(['sv','thr'],String(v).trim()===''?DEL:(+v||0));render()}
+function svBack(){tab='ov';render();window.scrollTo(0,document.body.scrollHeight)}
+
+/* คำแนะนำรายเดือน (rule-based ไม่ใช้ AI) */
+function svAdv(M,i,thr){
+  const m=M[i],o=[],nx=M.slice(i+1,i+4),dpay=m.pb+m.pk,pct=m.f.inc>0?Math.round(dpay/m.f.inc*100):0;
+  const nm=[['ins','ประกันชีวิต'],['hbd','HBD / แต๊ะเอีย'],['oth','ก้อนอื่นๆ']].filter(([k])=>m.f[k]>0).map(([k,n])=>n+' '+fmt(m.f[k]));
+  if(m.r2<0){
+    o.push(['w','⚠️ เดือนนี้ขาด '+fmt(-m.r2)+' บาท'+(nm.length?' — สาเหตุหลักคือก้อนใหญ่ ('+nm.join(', ')+')':dpay>0?' — ค่างวดหนี้ '+fmt(dpay)+' สูงเกินรายได้ที่เหลือ':'')]);
+    if(m.pk>0){const c=Math.min(m.pk,-m.r2),rest=-m.r2-c;o.push(['i','💡 ทางออก: ลดจ่าย LINE BK ลง '+fmt(c)+(rest>0?' และลด Daily/Sasu อีก '+fmt(rest):'')+' จะไม่ติดลบ (ส่วนที่ไม่จ่ายหนี้จะค้างเพิ่ม ยังไม่คิดดอก)'])}
+    else o.push(['i','💡 ทางออก: ลด Daily/Sasu ลง '+fmt(-m.r2)+' หรือเลื่อนก้อนใหญ่ออกไป']);
+    if(m.res<0)o.push(['w','ยอดสะสมถึงเดือนนี้ติดลบ '+fmt(-m.res)+' — ต้องมีเงินจากที่อื่นมาอุด (เช่น ยืมเพิ่ม ซึ่งทำให้หนี้ไม่ลดตามแผน)']);
+  }else if(m.r2<thr)o.push(['y','🟡 เดือนนี้ตึง เหลือ '+fmt(m.r2)+' บาท (ต่ำกว่าเกณฑ์ '+fmt(thr)+') — เลี่ยงรายจ่ายนอกแผน']);
+  else o.push(['ok','🟢 เดือนนี้สบาย เหลือ '+fmt(m.r2)+' บาท']);
+  const bad=nx.map((x,j)=>({x,j:j+1})).filter(q=>q.x.r2<0);
+  if(bad.length){const q=bad[0],nd=-q.x.r2;o.push(['y','📅 อีก '+q.j+' เดือน ('+svLab(q.x.k,1)+') จะขาด '+fmt(nd)+(q.x.big>0?' เพราะมีก้อนใหญ่ '+fmt(q.x.big):'')+' → ควรเริ่มกันเงินเดือนละ ~'+fmt(Math.ceil(nd/q.j/100)*100)+' ตั้งแต่เดือนนี้'])}
+  else if(m.r2>=thr){
+    const ex=Math.floor((m.r2-thr)/500)*500;
+    if(ex>=500&&m.a>0&&m.a<=ex)o.push(['ok','🎯 ปิด BBL ให้หมดได้เลย (เหลือ '+fmt(m.a)+') ด้วยเงินเหลือเดือนนี้ — ภาระลดลงหนึ่งบัญชี']);
+    else if(ex>=500&&m.d>0)o.push(['ok','💸 จ่ายหนี้เพิ่มได้ราว '+fmt(ex)+' บาท โดยยังเหลือเงินเกณฑ์ตึงไว้ และอีก 3 เดือนข้างหน้าไม่มีเดือนขาด']);
+  }
+  if(m.f.bk>0||m.f.bb>0)o.push(['y','📥 เดือนนี้มียืมเพิ่ม'+(m.f.bk>0?' LINE BK '+fmt(m.f.bk):'')+(m.f.bb>0?' BBL '+fmt(m.f.bb):'')+' — หนี้ก้อนนี้เพิ่มขึ้น ไม่ได้ลดตามแผน']);
+  if(pct>=45)o.push(['y','ค่างวดหนี้กิน '+pct+'% ของรายได้เดือนนี้ — เหลือพื้นที่ปรับน้อย']);
+  if(m.d<=0.5&&(i==0||M[i-1].d>0.5))o.push(['ok','🎉 เดือนนี้หนี้หมดตามแผน']);
+  return o;
+}
+/* ภาพรวม */
+function svAdvAll(M,thr,cur0){
+  const o=[],neg=M.filter(x=>x.r2<0),end=M[M.length-1],fr=M.slice(cur0,cur0+12),bg=fr.reduce((s,x)=>s+x.big,0),mn=M.reduce((a,x)=>x.res<a.res?x:a,M[0]);
+  if(neg.length)o.push(['w','🔴 '+neg.length+' จาก '+M.length+' เดือนติดลบ หนักสุด: '+neg.slice().sort((p,q)=>p.r2-q.r2).slice(0,3).map(x=>svLab(x.k,1)+' ('+fmt(x.r2)+')').join(', ')]);
+  else o.push(['ok','🟢 ไม่มีเดือนไหนติดลบตามแผนนี้']);
+  if(mn.res<0)o.push(['y','ยอดสะสมต่ำสุด '+fmt(mn.res)+' ที่ '+svLab(mn.k,1)+' — เป็นช่วงที่ต้องหาเงินอุดมากที่สุด']);
+  if(bg>0)o.push(['i','💡 ก้อนใหญ่ 12 เดือนข้างหน้ารวม '+fmt(bg)+' บาท → กันเงินเดือนละ ~'+fmt(Math.ceil(bg/12/100)*100)+' ล่วงหน้า จะไม่ขาดทีเดียว']);
+  if(end.d>0.5)o.push(['y','ตามแผนนี้ถึง '+svLab(end.k,1)+' หนี้ยังเหลือ '+fmt(end.d)+' (BBL '+fmt(end.a)+' · LINE BK '+fmt(end.b)+') — ถ้าอยากให้หมด ต้องเพิ่มยอดจ่ายหรือขยายแผน']);
+  else o.push(['ok','🎉 ตามแผนนี้หนี้หมดภายใน '+svLab(end.k,1)]);
+  return o;
+}
+function svChart(M){
+  const n=M.length,W=340,bw=W/n,H=104,mx=Math.max(...M.map(x=>x.d),1);
+  let bars='',hit='',lab='';
+  M.forEach((x,i)=>{
+    const X=i*bw,hb=x.a/mx*(H-14),hk=x.b/mx*(H-14);
+    if(i==SVi)bars+=`<rect x="${X}" y="0" width="${bw}" height="${H}" fill="rgba(232,185,63,.35)"/>`;
+    bars+=`<rect x="${X+1}" y="${H-hb}" width="${bw-2}" height="${hb}" fill="#7b9ac7"/><rect x="${X+1}" y="${H-hb-hk}" width="${bw-2}" height="${hk}" fill="#e0897a"/>`;
+    hit+=`<rect x="${X}" y="0" width="${bw}" height="${H}" fill="transparent" onclick="SVs(${i},1)"/>`;
+    if(i==0||x.k.endsWith('-01'))lab+=`<text x="${X}" y="${H+11}" font-size="9" fill="#8a8f98">${svLab(x.k)} ${String(+x.k.slice(0,4)+543).slice(2)}</text>`;
+  });
+  const rs=M.map(x=>x.res),lo=Math.min(0,...rs),hi=Math.max(0,...rs),H2=90,pd=8,y=v=>pd+(hi-v)/((hi-lo)||1)*(H2-2*pd);
+  const pts=M.map((x,i)=>`${(i*bw+bw/2).toFixed(1)},${y(x.res).toFixed(1)}`).join(' ');
+  const dots=M.map((x,i)=>`<circle cx="${(i*bw+bw/2).toFixed(1)}" cy="${y(x.res).toFixed(1)}" r="${i==SVi?4:2}" fill="${x.res<0?'#c0584a':'#2c7a64'}"/>`).join('');
+  const sel=`<rect x="${SVi*bw}" y="0" width="${bw}" height="${H2}" fill="rgba(232,185,63,.35)"/>`;
+  return `<div class="sub"><span>📉 ยอดหนี้คงเหลือ (สิ้นเดือน)</span><span><i style="color:#7b9ac7">■</i> BBL <i style="color:#e0897a">■</i> LINE BK</span></div>
+  <svg viewBox="0 0 ${W} ${H+14}" width="100%">${bars}${lab}${hit}</svg>
+  <div class="sub" style="margin-top:12px"><span>💧 เงินสะสม (Reserve) ต่ำสุด ${fmt(lo)} · สูงสุด ${fmt(hi)}</span></div>
+  <svg viewBox="0 0 ${W} ${H2}" width="100%">${sel}<line x1="0" x2="${W}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="#9aa0aa" stroke-dasharray="3 3"/><polyline points="${pts}" fill="none" stroke="#5f6670" stroke-width="1.5"/>${dots}${M.map((x,i)=>`<rect x="${i*bw}" y="0" width="${bw}" height="${H2}" fill="transparent" onclick="SVs(${i},1)"/>`).join('')}</svg>`;
+}
+function surv(){
+  const M=svModel(),thr=D.sv&&D.sv.thr!==undefined?+D.sv.thr:5000,nowK=ym(new Date());
+  if(SVi<0||SVi>=M.length){const j=M.findIndex(x=>x.k==nowK);SVi=j>=0?j:0}
+  const m=M[SVi],end=M[M.length-1],c0=Math.max(0,M.findIndex(x=>x.k==nowK)),fr=M.findIndex((x,i)=>M.slice(i).every(y=>y.d<=0.5));
+  const neg=M.filter(x=>x.r2<0).length,mn=M.reduce((a,x)=>x.res<a.res?x:a,M[0]);
+  const ob=D.sv&&D.sv.ob!==undefined?+D.sv.ob:SV_OPEN[0],ok=D.sv&&D.sv.ok!==undefined?+D.sv.ok:SV_OPEN[1];
+  let h=`<div class="top"><button class="btn s" onclick="svBack()">‹ กลับ Debt</button><b style="font-size:18px">🛟 Surviver</b><span></span></div>
+  <div class="mut" style="padding:0 8px 6px">แผนใช้จ่ายและปลดหนี้ BBL + LINE BK รายเดือน ตั้งต้นจากชีท Simulation D1 แตะเดือนเพื่อดูรายละเอียด แก้ตัวเลขได้ทุกช่อง</div>`;
+  h+=card(`<div class="svs"><div><span>หนี้คงเหลือตอนจบแผน</span><b style="color:${end.d>0.5?'#c0584a':'#2c7a64'}">${fmt(end.d)}</b><span>${svLab(end.k,1)}</span></div>
+   <div><span>ปลดหนี้</span><b>${fr>=0?svLab(M[fr].k,1):'ยังไม่หมด'}</b><span>${fr>=0?'ตามแผนนี้':'ในช่วงแผน'}</span></div>
+   <div><span>เดือนที่ติดลบ</span><b style="color:${neg?'#c0584a':'#2c7a64'}">${neg} / ${M.length}</b><span>เดือน</span></div>
+   <div><span>เงินสะสมต่ำสุด</span><b style="color:${col(mn.res)}">${fmt(mn.res)}</b><span>${svLab(mn.k,1)}</span></div></div>`);
+  /* ปฏิทิน */
+  const yrs=[...new Set(M.map(x=>x.k.slice(0,4)))];
+  h+=card(`<div class="r"><b>🗓️ ปฏิทินเอาตัวรอด (เงินเหลือสุทธิรายเดือน)</b></div>`+yrs.map(y=>{
+    let cells='';for(let mm=1;mm<=12;mm++){const k=y+'-'+String(mm).padStart(2,'0'),x=M.find(q=>q.k==k);
+      cells+=x?`<div class="svm ${svCls(x.r2,thr)}${x.i==SVi?' on':''}${k==nowK?' now':''}${k<nowK?' past':''}" onclick="SVs(${x.i},1)"><b>${svLab(k)}</b>${svK(x.r2)}</div>`:'<div></div>'}
+    return `<div class="sub"><span>${+y+543}</span></div><div class="svc">${cells}</div>`}).join('')+
+   `<div class="mut" style="margin-top:8px"><span class="svd ok"></span> สบาย (≥ เกณฑ์) <span class="svd tt"></span> ตึง (0 ถึงเกณฑ์) <span class="svd neg"></span> ติดลบ · กรอบเหลือง = เดือนนี้ · จางลง = ผ่านมาแล้ว</div>
+    <div class="r" style="margin-top:6px"><span class="mut">เกณฑ์ "ตึง" (บาท)</span><input class="n${D.sv&&D.sv.thr!==undefined?' sve':''}" type="number" inputmode="decimal" value="${thr}" onchange="SVT(this.value)"></div>`);
+  h+=card(svChart(M));
+  h+=card(`<b>🧭 ภาพรวมและคำแนะนำ</b>`+svAdvAll(M,thr,c0).map(([c,t])=>`<div class="ad ${c}">${t}</div>`).join(''));
+  /* รายเดือน */
+  const row=(n,l)=>`<div class="r"><span>${l}${m.ov[n]?' <small class="mut">(แก้แล้ว)</small>':''}</span><input class="n${m.ov[n]?' sve':''}" type="number" inputmode="decimal" value="${m.f[n]}" onchange="SVE('${m.k}','${n}',this.value)"></div>`;
+  const L=Object.fromEntries(SVF),tot=(l,v,c)=>`<div class="r" style="border-top:1.5px solid #c9ced6;margin-top:4px"><b>${l}</b><b style="color:${c||'inherit'}">${fmt(v)}</b></div>`;
+  h+=`<div id="svd" class="card"><div class="nv"><button class="btn" onclick="SVs(${Math.max(0,SVi-1)})">‹</button><b>${svLab(m.k,1)}${m.k==nowK?' <small class="mut">● เดือนนี้</small>':''}</b><button class="btn" onclick="SVs(${Math.min(M.length-1,SVi+1)})">›</button></div>
+   <div class="ad ${svCls(m.r2,thr)=='neg'?'w':svCls(m.r2,thr)=='tt'?'y':'ok'}" style="justify-content:space-between"><span>เงินเหลือสุทธิเดือนนี้</span><b>${fmt(m.r2)} ฿</b></div>
+   <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:6px 0"><input type="checkbox" ${SVfwd?'checked':''} onchange="SVfwd=this.checked;render()" style="width:auto"> แก้แล้วใช้กับเดือนถัดไปทั้งหมดด้วย (ตั้งแต่เดือนนี้เป็นต้นไป)</label>
+   <div class="sub"><span>รายรับ</span></div>${row('inc',L.inc)}
+   <div class="sub"><span>รายจ่ายประจำเดือน</span></div>${['fx','dl','ss','ew','md','nf'].map(n=>row(n,L[n])).join('')}${tot('รวมรายจ่าย',m.exp)}
+   ${tot('เหลือก่อนจ่ายหนี้',m.r1,col(m.r1))}
+   <div class="sub"><span>ชำระหนี้ · ยืมเพิ่ม</span></div>${['pb','pk','bb','bk'].map(n=>row(n,L[n])).join('')}
+   <div class="mut">หนี้ต้นเดือน→สิ้นเดือน: BBL ${fmt(m.aB)} → ${fmt(m.a)} · LINE BK ${fmt(m.bB)} → ${fmt(m.b)} · รวม ${fmt(m.d)}${(m.pb<m.f.pb||m.pk<m.f.pk)?' · (จ่ายจริงไม่เกินยอดหนี้ที่เหลือ)':''}</div>
+   <div class="sub"><span>ก้อนใหญ่</span></div>${['ins','hbd','oth'].map(n=>row(n,L[n])).join('')}
+   ${tot('= เหลือสุทธิ',m.r2,col(m.r2))}<div class="r mut"><span>เงินสะสมถึงเดือนนี้</span><span style="color:${col(m.res)}">${fmt(m.res)}</span></div>
+   <div class="r" style="margin-top:6px"><span class="mut">ลบช่องให้ว่าง = กลับเป็นค่าจากชีท</span>${Object.keys(m.ov).length?`<button class="btn s" onclick="SVR('${m.k}')">รีเซ็ตเดือนนี้</button>`:''}</div></div>`;
+  h+=card(`<b>💬 คำแนะนำเดือน ${svLab(m.k,1)}</b>`+svAdv(M,SVi,thr).map(([c,t])=>`<div class="ad ${c}">${t}</div>`).join('')+`<div class="mut" style="margin-top:6px">คำแนะนำคำนวณจากตัวเลขของคุณด้วยกฎที่ตั้งไว้ ไม่ได้ใช้ AI</div>`);
+  h+=card(`<b>⚙️ ตั้งค่า</b><div class="r"><span>ยอดหนี้ BBL ตั้งต้น (ต้นเดือน ${svLab(M[0].k,1)})</span><input class="n${D.sv&&D.sv.ob!==undefined?' sve':''}" type="number" inputmode="decimal" value="${ob}" onchange="SVO('ob',this.value)"></div>
+   <div class="r"><span>ยอดหนี้ LINE BK ตั้งต้น</span><input class="n${D.sv&&D.sv.ok!==undefined?' sve':''}" type="number" inputmode="decimal" value="${ok}" onchange="SVO('ok',this.value)"></div>
+   <button class="btn c" style="width:100%;margin-top:8px" onclick="SVRA()">รีเซ็ตทั้งหมดกลับเป็นค่าจากชีท</button>
+   <div class="mut" style="margin-top:6px">ยังไม่คิดดอกเบี้ย (ชีทต้นฉบับไม่ได้คิด) · ข้อมูลหน้านี้แยกจากหน้า Debt จริง ถ้าอยากให้ดึงยอดจริงมาเป็นค่าตั้งต้น บอกได้</div>`);
+  return h+'<div style="height:80px"></div>';
+}
+
 function render(){
-  const app=document.getElementById('app'),html=tab=='ov'?ov():tab=='mo'?monthly():tab=='sim'?sim():saving();
+  const app=document.getElementById('app'),html=tab=='ov'?ov():tab=='mo'?monthly():tab=='sim'?sim():tab=='sur'?surv():saving();
   if(app.childNodes.length&&app.dataset.tab===tab){const tmp=document.createElement('div');tmp.innerHTML=html;morphKids(app,tmp)}
   else app.innerHTML=html;
   app.dataset.tab=tab;
