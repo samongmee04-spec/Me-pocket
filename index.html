@@ -110,7 +110,7 @@ input.n.sve{background:#fff4c9}
 <script>
 const INC=['K Bank','SCB','BBL','KTB','7-11','BTS','MRT','Cash','Others'];
 const G=[['Fixed',[['Mom',5000],['Child',10000],['Psy',4500]]],
- ['Utilities',[['Mobile',1100],['Net',700],['Watch',200],['Netflix',619],['Electric',3000],['Water',200],['Mid cost',2380],['Insure',20000]]],
+ ['Utilities',[['Mobile',1100],['Net',700],['Watch',200],['Netflix',619],['Electric',3000],['Water',200],['Mid cost',2380],['Insure',20000],['AI',1420],['Others',0]]],
  ['Pay',[['BBL',8000],['Line BK',12000]]]];
 const WD=[['ค่าเดินทาง',['Motorcycle เช้า','MRT เช้า','Van','BTS เช้า','BTS เย็น','MRT เย็น','Express']],['ค่ากิน',['Breakfast','Launch','Dinner']],['ใช้จ่ายอื่นๆ',['ซื้อของ','อื่นๆ']]];
 const WE=[['ค่าเดินทาง',['Oil','Express']],['ค่ากิน',['Small meal','Big meal','Others']]];
@@ -530,7 +530,7 @@ function CH(el,t,k){if(LP&&LP.el===el){clearTimeout(LT);LT=null;LP=null}S(t,k,el
 const inp=(t,k,v,c)=>`<input class="n ${c||''}" type="number" inputmode="decimal" placeholder="0" value="${v||''}" oninput="LI(this,'${t}','${k}')" onchange="CH(this,'${t}','${k}')">`;
 const card=h=>`<div class="card">${h}</div>`;
 const nav=()=>`<div class="nv"><button class="btn" onclick="mv(-1)">‹</button><b>${plab(ym(cur))}</b><button class="btn" onclick="mv(1)">›</button></div>`;
-const IC={'K Bank':'🏦','SCB':'🏛️','BBL':'🏢','KTB':'🏤','7-11':'🏪','BTS':'🚈','MRT':'🚇','Cash':'💵','Others':'✨','Mom':'👩','Child':'🧒','Psy':'🩺','Mobile':'📱','Net':'🌐','Watch':'⌚','Netflix':'🎬','Electric':'💡','Water':'💧','Mid':'🧾','Insure':'🛡️','Line':'💳','Motorcycle':'🏍️','Van':'🚐','Express':'🛣️','Breakfast':'🍳','Launch':'🍱','Dinner':'🍜','ซื้อของ':'🛍️','อื่นๆ':'✨','Oil':'⛽','Small':'🥪','Big':'🍽️','ค่าเดินทาง':'🚌','ค่ากิน':'🍽️','ใช้จ่ายอื่นๆ':'🛍️','Mymo':'🪙','Dime':'📈','ออมสิน':'🏧'};
+const IC={'K Bank':'🏦','SCB':'🏛️','BBL':'🏢','KTB':'🏤','7-11':'🏪','BTS':'🚈','MRT':'🚇','Cash':'💵','Others':'✨','Mom':'👩','Child':'🧒','Psy':'🩺','Mobile':'📱','Net':'🌐','Watch':'⌚','Netflix':'🎬','Electric':'💡','Water':'💧','Mid':'🧾','Insure':'🛡️','AI':'🤖','Line':'💳','Motorcycle':'🏍️','Van':'🚐','Express':'🛣️','Breakfast':'🍳','Launch':'🍱','Dinner':'🍜','ซื้อของ':'🛍️','อื่นๆ':'✨','Oil':'⛽','Small':'🥪','Big':'🍽️','ค่าเดินทาง':'🚌','ค่ากิน':'🍽️','ใช้จ่ายอื่นๆ':'🛍️','Mymo':'🪙','Dime':'📈','ออมสิน':'🏧'};
 const ic=n=>IC[n]||IC[n.split(' ')[0]]||'•';
 const rI=n=>`<span class="ri">${ic(n)}</span>`;
 const ICOL=['#7b9ac7','#e0897a','#5f9c8e','#f2cf5b','#b9d36a','#f4b9a8','#bcd3ea','#a79ad0','#c3c8d0'];
