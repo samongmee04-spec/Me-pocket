@@ -500,6 +500,9 @@ const ring=(used,tot)=>{const p=tot>0?Math.max(0,Math.min(1,used/tot)):0;
  return `<svg viewBox="0 0 100 100" width="100" height="100" style="flex:none"><circle cx="50" cy="50" r="38" fill="none" stroke="#5f9c8e" stroke-width="15"/><circle cx="50" cy="50" r="38" fill="none" stroke="#e0897a" stroke-width="15" stroke-dasharray="${p*238.76} 238.76" transform="rotate(-90 50 50)"/></svg>`};
 const col=v=>v<0?'#c0584a':'#2c7a64';
 
+/* รอบกู้ปัจจุบัน: 25 ของเดือนนี้ (หรือเดือนก่อนถ้ายังไม่ถึงวันที่ 25) ถึง 24 ของเดือนถัดไป · ไม่ขึ้นกับเดือนที่เลื่อนดู */
+const dcS=(()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth()-(n.getDate()>=25?0:1),25)})(),dcE=new Date(dcS.getFullYear(),dcS.getMonth()+1,24);
+const dcLab=()=>dcS.getDate()+' '+dcS.toLocaleDateString('th-TH',{month:'short'})+' – '+dcE.getDate()+' '+dcE.toLocaleDateString('th-TH',{month:'short'})+' '+(dcE.getFullYear()+543);
 /* ---------- แท็บ Overview ---------- */
 function ov(){
   const M=ym(cur),m=mo(M),inc=sum(m.inc),ex=expTot(M),left=inc-ex;
@@ -563,7 +566,7 @@ function ov(){
   h+=band('bo',o);
 
   /* กลุ่ม 4: Debt (แถบดำ) */
-  let dh='',allUsed=0,allAdd=0;const td=ymd(new Date()),pa=ymd(pStart(M)),pb=ymd(pEnd(M)),dSm=[];
+  let dh='',allUsed=0,allAdd=0;const td=ymd(new Date()),pa=ymd(dcS),pb=ymd(dcE),dSm=[];
   DL().forEach(([a,def])=>{
     const L=Object.entries(D.debt).map(([id,e])=>Object.assign({id},e)).filter(x=>x.a==a).sort((p,q)=>(q.ts||0)-(p.ts||0));
     const paid=L.filter(x=>x.t=='pay').reduce((s,x)=>s+(+x.v||0),0),add=L.filter(x=>x.t=='add').reduce((s,x)=>s+(+x.v||0),0);
@@ -584,7 +587,7 @@ function ov(){
     <div class="r" onclick="T('l${id}')" style="cursor:pointer"><b>รายการที่บันทึก (${L.length}) ${C['l'+id]?'▸':'▾'}</b><span class="mut">วันนี้: จ่ายเพิ่ม ${fmt2(tP)} · กู้เพิ่ม ${fmt2(tA)}</span></div>
     ${C['l'+id]?'':`<div class="lst">${list}</div>`}</div>`;
   });
-  const dSumBox=`<div class="in" style="margin-top:10px"><b>📥 สรุปยอดกู้เพิ่มรอบนี้</b><div class="mut">${plab(M)}</div>`+dSm.map(([a,v])=>`<div class="r"><span>🏦 ${esc(a)}</span><b style="color:${v>0?'#c0584a':'#8a8f98'}">${v>0?'+':''}${fmt2(v)}</b></div>`).join('')+`<div class="dv"></div><div class="r"><b>รวมทุกธนาคาร</b><b style="color:${allAdd>0?'#c0584a':'#8a8f98'}">${allAdd>0?'+':''}${fmt2(allAdd)}</b></div></div>`;
+  const dSumBox=`<div class="in" style="margin-top:10px"><b>📥 สรุปยอดกู้เพิ่มรอบนี้</b><div class="mut">${dcLab()}</div>`+dSm.map(([a,v])=>`<div class="r"><span>🏦 ${esc(a)}</span><b style="color:${v>0?'#c0584a':'#8a8f98'}">${v>0?'+':''}${fmt2(v)}</b></div>`).join('')+`<div class="dv"></div><div class="r"><b>รวมทุกธนาคาร</b><b style="color:${allAdd>0?'#c0584a':'#8a8f98'}">${allAdd>0?'+':''}${fmt2(allAdd)}</b></div></div>`;
   h+=band('bk',sec2('debt','Debt (แยกจากส่วนอื่น)','ใช้แล้วรวม '+fmt(allUsed),dh,'🏦','#e0897a','#fadfd7',dSumBox));
   return h;
 }
