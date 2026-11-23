@@ -152,6 +152,37 @@ function toFS(p,del){const o={};for(const k of Object.keys(p)){const v=p[k];o[k]
 function parseCfg(t){const c={},ok=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId','measurementId'],re=/["']?(\w+)["']?\s*:\s*["']([^"']*)["']/g;let m;while((m=re.exec(t||''))){if(ok.includes(m[1]))c[m[1]]=m[2]}return c}
 /*PURE-END*/
 
+/* ---------- Fix ก้อนใหญ่ประจำปี: รายการตั้งต้นจากไฟล์ debt_repayment_plan (ชีท Fix ใหญ่) ----------
+   เพิ่มให้ครั้งเดียวต่อ id (ถ้าลบในแอปแล้วจะไม่เด้งกลับมา) — วันที่ = วันจ่ายจริง (pay date) */
+const YF_SEED=[
+ ['sd01','ประกันชีวิตครึ่งปีแรก',22895.48,1,23],
+ ['sd02','ส่วนกลาง (ม.ค.)',950,1,23],
+ ['sd03','แต๊ะเอียตรุษจีน',4000,2,17],
+ ['sd04','ส่วนกลาง (ก.พ.)',950,2,24],
+ ['sd05','HBD นิศา',2000,3,22],
+ ['sd06','ส่วนกลาง (มี.ค.)',950,3,24],
+ ['sd07','ส่วนกลาง (พ.ค.)',950,5,24],
+ ['sd08','HBD นิโน, นิจิ',4000,6,22],
+ ['sd09','HBD เจได',2000,6,10],
+ ['sd10','ประกันรถโตเกียว',15000,6,24],
+ ['sd11','ส่วนกลาง (มิ.ย.)',950,6,24],
+ ['sd12','ประกันชีวิตครึ่งปีหลัง',22895.48,7,27],
+ ['sd13','ส่วนกลาง (ก.ค.)',950,7,24],
+ ['sd14','พรบรถ',5000,8,9],
+ ['sd15','ส่วนกลาง (ส.ค.)',950,8,24],
+ ['sd16','ส่วนกลาง (ก.ย.)',950,9,24],
+ ['sd17','ส่วนกลาง (ต.ค.)',950,10,24],
+ ['sd18','ส่วนกลาง (พ.ย.)',950,11,24],
+ ['sd19','ส่วนกลาง (ธ.ค.)',950,12,24]
+];
+function seedYF(){
+  const t=Date.now(),f=pOf(new Date());let n=0;
+  YF_SEED.forEach(([id,nm,v,mo,day],i)=>{
+    if(D.yfix&&D.yfix[id])return;
+    W(['yfix',id],{n:nm,v,mo,day,rem:7,ts:t+i,from:f});n++;
+  });
+  return n;
+}
 /* ---------- เก็บข้อมูล / ซิงก์ ---------- */
 let D=norm(),OUT={};
 try{D=norm(JSON.parse(localStorage.ft||'{}'))}catch(e){}
@@ -192,7 +223,7 @@ function reconcile(r){
 }
 function boot(){
   const cfg=cfgGet();
-  if(!cfg){SY.s='local';return}
+  if(!cfg){SY.s='local';seedYF();return}
   if(!window.firebase){SY.s='err';SY.msg='โหลด Firebase ไม่ได้ (อาจไม่มีอินเทอร์เน็ต) ตอนนี้บันทึกในเครื่องก่อน จะส่งขึ้นเมื่อเชื่อมต่อได้';return}
   try{
     firebase.initializeApp(cfg);const fs=firebase.firestore();
@@ -205,6 +236,7 @@ function boot(){
         let r=norm(snap.exists?snap.data():{});
         if(first&&!fc){first=false;r=reconcile(r)}
         D=r;keep();
+        if(!fc&&!snap.metadata.hasPendingWrites&&!window._seeded){window._seeded=1;seedYF()}
       }
       if(pw){SY.s='wait';SY.msg=''}
       else if(!fc){SY.s='ok';SY.last=new Date().toLocaleTimeString('th-TH')}
