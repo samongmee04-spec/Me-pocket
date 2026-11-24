@@ -1,0 +1,73 @@
+name: P mass
+
+# Times are UTC. Thailand = UTC+7.
+on:
+  schedule:
+    - cron: "*/15 0-3 * * 1-6"    # Mon-Sat 07:00-10:45 (morning Mass 6.30-9.00)
+    - cron: "30,45 10 * * 1-6"    # Mon-Sat 17:30-17:45 (evening Mass 17.00-20.00)
+    - cron: "*/15 11-14 * * 1-6"  # Mon-Sat 18:00-21:45
+    - cron: "30,45 2 * * 0"       # Sun 09:30-09:45 (Mass 9.00-11.00)
+    - cron: "*/15 3-5 * * 0"      # Sun 10:00-12:45
+  workflow_dispatch:
+    inputs:
+      fb_url:
+        description: "ลิงก์ไลฟ์ Facebook (เว้นว่าง = ตรวจหน้าคุณพ่อตามปกติ)"
+        required: false
+        default: ""
+      dry_run:
+        description: "ทดสอบเท่านั้น (ไม่อัปโหลด ส่งอีเมลตัวอย่างชื่อคลิป)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pmass
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          pip install -U -r requirements.txt
+          command -v ffmpeg || (sudo apt-get update -q && sudo apt-get install -y -q ffmpeg)
+
+      - name: Run P mass
+        env:
+          FB_URL: ${{ inputs.fb_url }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_PRIVACY: ${{ vars.YT_PRIVACY || 'private' }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_TO: ${{ secrets.NOTIFY_TO }}
+          FB_COOKIES: ${{ secrets.FB_COOKIES }}
+        run: |
+          args=()
+          if [ -n "$FB_URL" ]; then args+=(--url "$FB_URL"); fi
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          python pmass.py "${args[@]}"
+
+      # Only the small list of handled videos is saved. Videos are never committed.
+      - name: Save progress
+        if: always()
+        run: |
+          git config user.name "p-mass-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/processed.json
+          git diff --cached --quiet && exit 0
+          git commit -q -m "Update processed videos"
+          for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done

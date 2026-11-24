@@ -1,0 +1,9 @@
+# Never keep videos in the repository
+*.mp4
+*.mkv
+*.webm
+*.part
+*.ytdl
+__pycache__/
+.pytest_cache/
+fb_cookies.txt
