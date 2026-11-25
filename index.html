@@ -45,7 +45,6 @@ input[type=date]{border:1px solid #fff;border-radius:999px;padding:8px 12px;back
 .in{background:rgba(255,255,255,.6);border-radius:24px;padding:12px;margin:10px 0}
 .dv{border-top:1.5px dashed #c9ced6;margin:10px 0}
 .r>span.pill:not(.ri){flex:none}.nw{white-space:nowrap}.dbn{white-space:nowrap}
-.bl{min-width:74px;text-align:right;font-size:12px;white-space:nowrap;text-decoration:underline dotted;cursor:pointer}
 .pill{white-space:nowrap;border:1.5px solid #d6a99d;color:#b9695a;border-radius:999px;padding:3px 12px;font-size:13px}
 .ed{color:#b98a3e;text-decoration:underline;font-size:13px}
 .dbn{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
@@ -101,7 +100,7 @@ input.n.sve{background:#fff4c9}
   <textarea id="cfgin" placeholder='apiKey: "...",&#10;authDomain: "...",&#10;projectId: "...",&#10;appId: "..."'></textarea>
   <div class="r"><button class="btn p" style="flex:1" onclick="connect()">เชื่อมต่อ / กู้คืนข้อมูล</button><button class="btn" onclick="disconnect()">ยกเลิกการเชื่อมต่อ</button></div>
   <button class="btn" style="width:100%;margin-top:8px" onclick="XL()">📊 ส่งออกเป็นไฟล์ Excel</button>
-  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-24 · รอบ 25–24 · Excel · Simulate อัตโนมัติ · Preset · ยอดคงเหลือแต่ละแหล่งเงิน</div>
+  <div class="mut" style="margin-top:8px">เวอร์ชันแอป 2026-11-20 · รอบ 25–24 · Excel · Simulate อัตโนมัติ · Preset</div>
 </div></div>
 
 <div class="mbg" id="pm" onclick="if(event.target===this)PM(0)"><div class="card" id="pmb"></div></div>
@@ -155,9 +154,9 @@ function delIn(o,path){let c=o;for(let i=0;i<path.length-1;i++){c=c[path[i]];if(
 function applyPatch(base,patch){for(const k of Object.keys(patch)){const v=patch[k];if(v===DEL)delete base[k];else if(isObj(v)){if(!isObj(base[k]))base[k]={};applyPatch(base[k],v)}else base[k]=v}return base}
 function overlay(base,patch){for(const k of Object.keys(patch)){const v=patch[k];if(isObj(v)){if(!isObj(base[k]))base[k]={};overlay(base[k],v)}else base[k]=v}return base}
 function missing(remote,local){const out={};for(const k of Object.keys(local||{})){const l=local[k],r=remote?remote[k]:undefined;if(isObj(l)){const m=missing(isObj(r)?r:{},l);if(hasKeys(m))out[k]=m}else if(r===undefined)out[k]=l}return out}
-function norm(x){const o=Object.assign({bud:{},tot:{},used0:{},m:{},d:{},sav:{},debt:{},sim:{},set:{},yfix:{},cr:{},sv:{},bal:{},so:{},bx:{}},x||{});
+function norm(x){const o=Object.assign({bud:{},tot:{},used0:{},m:{},d:{},sav:{},debt:{},sim:{},set:{},yfix:{},cr:{},sv:{}},x||{});
  if(Array.isArray(o.debt)){const n={};o.debt.forEach((e,i)=>{n['o'+i]=Object.assign({ts:i},e)});o.debt=n}
- for(const k of ['bud','tot','used0','m','d','sav','debt','sim','set','yfix','cr','sv','bal','so','bx'])if(!isObj(o[k]))o[k]={};return o}
+ for(const k of ['bud','tot','used0','m','d','sav','debt','sim','set','yfix','cr','sv'])if(!isObj(o[k]))o[k]={};return o}
 function toFS(p,del){const o={};for(const k of Object.keys(p)){const v=p[k];o[k]=v===DEL?del():isObj(v)?toFS(v,del):v}return o}
 function parseCfg(t){const c={},ok=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId','measurementId'],re=/["']?(\w+)["']?\s*:\s*["']([^"']*)["']/g;let m;while((m=re.exec(t||''))){if(ok.includes(m[1]))c[m[1]]=m[2]}return c}
 /*PURE-END*/
@@ -351,49 +350,6 @@ const expTot=M=>sum(mo(M).exp)+daySum(M);
 const dKey=s=>{const w=dt(s).getDay();return w==0?'sun':w==6?'sat':'wd'};
 const dBud=s=>D.bud[dKey(s)]??({wd:444,sat:2000,sun:2000})[dKey(s)];
 const bdg=(g,n,d)=>D.bud[g+'.'+n]??d;
-const BAL_WD=WD,BAL_AUTO=AUTO,BAL_AFROM=AUTO_FROM;
-/* ===== ยอดคงเหลือแต่ละแหล่งเงิน (โค้ดชุดเดียวกันใน Me pocket index.html และ To-do-list quick.html — แก้ต้องแก้ทั้งสองที่) =====
-   ยอด = ยอดตั้งต้น + รายรับเข้าแหล่งนั้น − รายจ่าย Daily ที่จ่ายจากแหล่งนั้น ± ถอน/โอน  (ยกยอดต่อเนื่อง ไม่รีเซ็ตตามรอบ)
-   ช่อง BTS… หักจาก BTS · MRT… หักจาก MRT · ช่องอื่นหักจาก Cash · จ่ายจากแหล่งอื่นเก็บใน so[วันที่][ช่อง][แหล่ง]
-   bal[แหล่ง] = จุดตั้งยอด {v ยอด, P รอบ, at วันที่, ib รายรับรอบนั้นตอนตั้ง, sb รายจ่ายวันนั้นตอนตั้ง, ts}
-   bx[id] = ถอน/โอน {f จาก, t ไป, v, ts} */
-const BAL_P0='2026-10', BAL_D0='2026-10-25';
-const bYmd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const bPOf=d=>{const p=d.getDate()>=25?d:new Date(d.getFullYear(),d.getMonth()-1,1);return p.getFullYear()+'-'+String(p.getMonth()+1).padStart(2,'0')};
-function bSrcOf(k){const n=String(k).split('.').slice(1).join('.');return /^bts/i.test(n)?'BTS':/^mrt/i.test(n)?'MRT':'Cash'}
-function bAutoMap(D){
-  const o={};
-  if(!D.set||!D.set.dinit){BAL_WD.forEach(([g,its])=>its.forEach(n=>{const k=g+'.'+n;if(BAL_AUTO[k]>0)o[k]=BAL_AUTO[k]}));return o}
-  Object.values(D.set.wd||{}).forEach(x=>{if(x&&!x.del&&x.k&&+x.def>0)o[x.k]=+x.def});return o;
-}
-function bDay(D,k,today){
-  const e=(D.d||{})[k]||{},w=new Date(k+'T00:00').getDay(),from=(D.set&&D.set.dfrom)||BAL_AFROM;
-  return (w>0&&w<6&&k>=from&&k<=today)?Object.assign({},bAutoMap(D),e):e;
-}
-function bSpend(D,k,s,today){
-  const e=bDay(D,k,today),ov=(D.so||{})[k]||{};let t=0;
-  for(const slot of Object.keys(e)){
-    const v=+e[slot]||0,o=ov[slot]||{};let os=0;
-    for(const src of Object.keys(o)){const a=+o[src]||0;os+=a;if(src===s)t+=a}
-    if(bSrcOf(slot)===s)t+=Math.max(0,v-os);
-  }
-  return t;
-}
-function bAnchor(D,s){const a=(D.bal||{})[s];return a&&a.at?a:{v:0,P:BAL_P0,at:BAL_D0,ib:0,sb:0,ts:0}}
-function balOf(D,s){
-  const a=bAnchor(D,s),today=bYmd(new Date()),from=(D.set&&D.set.dfrom)||BAL_AFROM;let b=+a.v||0;
-  for(const P of Object.keys(D.m||{})){if(P<a.P)continue;const v=+(((D.m[P]||{}).inc||{})[s])||0;b+=P===a.P?v-(+a.ib||0):v}
-  const days=new Set(Object.keys(D.d||{}).filter(k=>k>=a.at));
-  for(let d=new Date((a.at>from?a.at:from)+'T00:00');bYmd(d)<=today;d.setDate(d.getDate()+1)){const w=d.getDay();if(w>0&&w<6)days.add(bYmd(d))}
-  days.add(a.at);
-  for(const k of days){const sp=bSpend(D,k,s,today);b-=k===a.at?sp-(+a.sb||0):sp}
-  for(const x of Object.values(D.bx||{})){if(!x||!(+x.ts>(+a.ts||0)))continue;if(x.f===s)b-=+x.v||0;if(x.t===s)b+=+x.v||0}
-  return Math.round(b*100)/100;
-}
-function bNewAnchor(D,s,v){
-  const n=new Date(),t=bYmd(n),P=bPOf(n);
-  return {v:+v||0,P,at:t,ib:+(((D.m||{})[P]||{}).inc||{})[s]||0,sb:bSpend(D,t,s,t),ts:Date.now()};
-}
 /* Fix ก้อนใหญ่ประจำปี: อยู่ในรอบ (25–24) ที่มีวันครบกำหนด รวมเข้ากลุ่ม Fixed */
 function yfRows(P){
   const a=pStart(P),b=pEnd(P),r=[];
@@ -439,10 +395,6 @@ function DD(id){
 function ED(a,f){
   const o=prompt('ระบุจำนวนเงิน',(D[f]||{})[a]??'');
   if(o===null)return;W([f,a],+String(o).replace(/,/g,'')||0);render();
-}
-function SB(k){
-  const o=prompt('ตั้งยอดคงเหลือ '+k+' ตอนนี้ (ให้ตรงกับบัญชีจริง)',Math.round(balOf(D,k)));
-  if(o===null||String(o).trim()==='')return;W(['bal',k],bNewAnchor(D,k,+String(o).replace(/,/g,'')||0));render();
 }
 function T(id){C[id]=!C[id];render()}
 function mv(n){
@@ -631,7 +583,7 @@ function ov(){
   h+=band('by',remC+sumiC+sumeC);
 
   /* กลุ่ม 2: รายรับ (แถบเขียวขี้ม้า) */
-  const incC=sec2('inc','รายรับ',fmt(inc),`<div class="mut" style="margin-bottom:6px">กรอก "ยอดที่ได้รับ/เติมเข้ามาในรอบนี้ (25–24)" ของแต่ละช่อง (ไม่ใช่ยอดคงเหลือ) แอปจะหักค่าใช้จ่ายให้เอง<br>"เหลือ" = ยอดคงเหลือจริงตอนนี้ (ยกยอดต่อเนื่อง) ช่อง BTS/MRT หักจากบัตรนั้น ช่องอื่นหักจาก Cash · แตะตัวเลขเพื่อตั้งยอดให้ตรงกับบัญชี</div>`+INC.map(k=>{const b=balOf(D,k);return `<div class="r">${rI(k)}<span>${k}</span>${inp('inc',k,m.inc[k])}<a class="bl" onclick="SB('${k}')" style="color:${b<0?'#c0584a':'#7d828b'}">เหลือ ${fmt(b)}</a></div>`}).join(''),'📥','#b9d36a','#eaf3cf');
+  const incC=sec2('inc','รายรับ',fmt(inc),`<div class="mut" style="margin-bottom:6px">กรอก "ยอดที่ได้รับ/เติมเข้ามาในรอบนี้ (25–24)" ของแต่ละช่อง (ไม่ใช่ยอดคงเหลือ) แอปจะหักค่าใช้จ่ายให้เอง</div>`+INC.map(k=>`<div class="r">${rI(k)}<span>${k}</span>${inp('inc',k,m.inc[k])}</div>`).join(''),'📥','#b9d36a','#eaf3cf');
   h+=band('bg',incC);
 
   /* กลุ่ม 3: Daily + Fixed + Utilities + Pay (แถบส้ม) */
