@@ -700,16 +700,15 @@ function sim(){
   const{rows,P,today}=simRows(),wk=['อา','จ','อ','พ','พฤ','ศ','ส'];
   const tg=rows.reduce((t,x)=>t+x.g,0),tx=rows.reduce((t,x)=>t+x.x,0),last=rows.length?rows[rows.length-1].l:0;
   const neg=rows.find(x=>x.l<0),mn=rows.reduce((m,x)=>Math.min(m,x.l),Infinity);
-  /* เงินเหลือสุทธิ = Left วันสุดท้าย − งบ (ที่แก้ได้) ของ Fixed (รวมก้อนใหญ่ในรอบนี้) และ Utilities */
+  /* เงินเหลือสุทธิ = Left วันสุดท้าย − งบ (ที่แก้ได้) ของ Utilities */
   const gB=g=>{const it=(G.find(x=>x[0]==g)||[,[]])[1];return it.reduce((t,[n,d])=>t+(+bdg(g,n,d)||0),0)};
-  const bF=gB('Fixed')+yfRows(P).reduce((t,y)=>t+(+y.b||0),0),bU=gB('Utilities'),net=r2(last-bF-bU);
+  const bU=gB('Utilities'),net=r2(last-bU);
   const netBox=`<div class="r"><span>Left วันสุดท้าย (24)</span><b>${lfm(last)}</b></div>
-   <div class="r"><span>− งบ Fixed</span><b>${fmt2(bF)}</b></div>
    <div class="r"><span>− งบ Utilities</span><b>${fmt2(bU)}</b></div>
    <div class="r" style="border-top:1.5px dashed #c9ced6;margin-top:4px;padding-top:8px"><b>💰 เงินเหลือสุทธิ</b><b style="font-size:20px;color:${col(net)}">${lfm(net)} ฿</b></div>`;
   let h=`<div class="nv"><b style="flex:1">🧮 Simulate · ${plab(P)}</b></div>`;
   h+=card(`<div class="r"><b>💰 เงินเหลือสุทธิ</b><b style="font-size:20px;color:${col(net)}">${lfm(net)} ฿</b></div>
-   <div class="mut" style="margin:-2px 0 6px">= Left วันสุดท้าย − งบ Fixed ${fmt(bF)} − งบ Utilities ${fmt(bU)}</div>
+   <div class="mut" style="margin:-2px 0 6px">= Left วันสุดท้าย − งบ Utilities ${fmt(bU)}</div>
    <div class="r"><b>เงินเหลือสิ้นรอบ (24)</b><b style="color:${col(last)}">${lfm(last)} ฿</b></div>
    <div class="r"><span>รับเพิ่มที่ใส่ไว้</span><b>${fmt2(tg)}</b></div>
    <div class="r"><span>ใช้จ่ายที่วางแผน (${rows.length} วัน)</span><b>${fmt2(tx)}</b></div>
